@@ -10,10 +10,11 @@ import {
 	Facebook,
 	Youtube,
 	Instagram,
-	Twitter,
 	Bell,
 	Heart,
 	ShoppingCart,
+	Phone,
+	User,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,7 +25,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Logo } from "@/components/app/home";
+import { CarouselAds, Logo } from "@/components/app/home";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
@@ -49,27 +50,22 @@ export const Header = () => {
 						animate={{ height: "auto", opacity: 1 }}
 						exit={{ height: 0, opacity: 0 }}
 						transition={{ duration: 0.3 }}
-						className="bg-muted/50 relative hidden xl:flex"
+						className="bg-foreground text-background relative hidden xl:flex font-medium"
 					>
-						<div className="container px-4 py-3 flex items-center justify-between w-full mx-auto max-w-7xl">
-							<div className="flex items-center gap-2 h-4">
-								<div className="flex items-center gap-2 text-foreground">
+						<div className="container px-4 py-3 flex items-center justify-between w-full mx-auto">
+							<div className="flex items-center gap-2 h-4 w-1/3">
+								<div className="flex items-center gap-2">
 									<Mail className="h-4 w-4" />
 									<p className="text-sm">hello@noblee.com</p>
 								</div>
 								<Separator orientation="vertical" />
-								<p className="text-sm text-foreground">
-									Free Shipping for all orders over $100
-								</p>
-							</div>
-							<div className="flex items-center gap-4 h-4">
-								<div className="flex items-center gap-4 text-foreground">
-									<Facebook className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
-									<Youtube className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
-									<Instagram className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
-									<Twitter className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
+								<div className="flex items-center gap-2">
+									<Phone className="h-4 w-4" />
+									<p className="text-sm">(+84) 868 332 623</p>
 								</div>
-								<Separator orientation="vertical" />
+							</div>
+							<CarouselAds />
+							<div className="flex items-center gap-4 h-4 justify-end w-1/3">
 								{/* Button Lang */}
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -120,11 +116,17 @@ export const Header = () => {
 										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>
+								<Separator orientation="vertical" />
+								<div className="flex items-center gap-4">
+									<Facebook className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
+									<Youtube className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
+									<Instagram className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform" />
+								</div>
 							</div>
 						</div>
 						<Button
 							onClick={handleCloseBanner}
-							className="absolute right-4 top-1/2 -translate-y-1/2 bg-muted/50 hover:bg-transparent text-foreground opacity-50 hover:opacity-80 transition-opacity"
+							className="absolute right-4 top-1/2 -translate-y-1/2 bg-foreground hover:bg-transparent text-muted opacity-50 hover:opacity-80 transition-opacity"
 						>
 							<X className="h-4 w-4" />
 						</Button>
@@ -134,11 +136,11 @@ export const Header = () => {
 
 			{/* Header */}
 			<header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur shadow-sm">
-				<div className="container flex h-16 items-center justify-between mx-auto max-w-7xl">
+				<div className="container flex h-16 items-center justify-between mx-auto">
 					<motion.div
 						initial={{ opacity: 0, x: -20 }}
 						animate={{ opacity: 1, x: 0 }}
-						className="flex items-center gap-2"
+						className="flex items-center gap-2  w-1/3"
 					>
 						<Logo />
 					</motion.div>
@@ -146,7 +148,7 @@ export const Header = () => {
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="xl:flex items-center gap-12 hidden"
+						className="xl:flex items-center justify-center gap-12 hidden  w-1/3"
 					>
 						<Link
 							href="/"
@@ -189,7 +191,7 @@ export const Header = () => {
 					<motion.div
 						initial={{ opacity: 0, x: 20 }}
 						animate={{ opacity: 1, x: 0 }}
-						className="flex items-center gap-5 h-4"
+						className="flex items-center gap-5 h-4 w-1/3 justify-end"
 					>
 						<SearchIcon className="h-6 w-6 hover:text-primary cursor-pointer transition-colors" />
 						<Separator orientation="vertical" />
@@ -218,13 +220,12 @@ export const Header = () => {
 							</div>
 						</div>
 						<Separator orientation="vertical" />
-						<Link href="/login">
-							<Button
-								variant="ghost"
-								className="rounded-full cursor-pointer text-primary/90 hover:text-primary text-base"
-							>
-								Sign in
-							</Button>
+						<Link
+							href="/login"
+							className="hover:text-primary font-medium cursor-pointer transition-colors gap-1 size-6 flex items-center justify-center w-fit"
+						>
+							<User className="h-6 w-6" />
+							Sign in
 						</Link>
 					</motion.div>
 				</div>
