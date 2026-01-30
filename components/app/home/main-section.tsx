@@ -17,13 +17,9 @@ import { motion, AnimatePresence } from "framer-motion";
 export const MainSection = () => {
 	return (
 		<div className="w-full py-12 px-4 md:px-8 space-y-12">
-			<PromoBanner />
 			<div className="container mx-auto space-y-8">
-				<ProductSection
-					isBestDeal
-					products={[]}
-					title="Today's Best Deals"
-				/>
+				<PromoBanner />
+				<ProductSection isBestDeal products={[]} title="Today's Best Deals" />
 				<FeaturedProductSlider />
 				<ProductSection products={[]} title="Best Selling" />
 			</div>
@@ -47,12 +43,7 @@ const ProductSection = ({
 				{isBestDeal ? (
 					<Countdown targetDate="2026-02-01T23:59:59" />
 				) : (
-					<TextUnderline
-						as={Link}
-						href="11"
-						size="lg"
-						className="font-medium"
-					>
+					<TextUnderline as={Link} href="11" size="lg" className="font-medium">
 						View All
 					</TextUnderline>
 				)}
@@ -78,7 +69,7 @@ function PromoBanner() {
 	};
 
 	return (
-		<div className="container mx-auto max-w-7xl">
+		<div className="container mx-auto max-w-6xl">
 			<div className="relative flex w-full items-center justify-between overflow-hidden rounded-md xl:rounded-full bg-[#002E25] py-6 px-4 shadow-lg xl:px-12 xl:py-6">
 				<div className="absolute bottom-8 -left-16 h-64 w-64 z-1 rounded-full bg-[#0F5A4F] opacity-0 xl:opacity-100"></div>
 				<div className="absolute top-8 -left-16 h-64 w-64 rounded-full bg-[#169e8a] opacity-0 xl:opacity-100"></div>
@@ -89,14 +80,14 @@ function PromoBanner() {
 				<div className="relative z-10 flex w-full flex-col items-center justify-between gap-4 xl:flex-row">
 					<div className="flex items-center gap-1 xl:gap-10 flex-col xl:flex-row">
 						<h2 className="font-bold text-background text-xl xl:text-2xl">
-							Big Promotion <br className="hidden xl:flex" /> Grab
-							Your Vouchers!
+							Big Promotion <br className="hidden xl:flex" /> Grab Your
+							Vouchers!
 						</h2>
 						<div className="text-sm text-background text-justify px-10 xl:px-0">
 							<p>
 								Up to 35% Off everything code.
-								<br className="hidden xl:flex" /> Limited time
-								only. Excludes selected lines.
+								<br className="hidden xl:flex" /> Limited time only. Excludes
+								selected lines.
 							</p>
 						</div>
 					</div>
@@ -141,7 +132,8 @@ function FeaturedProductSlider() {
 			description:
 				"A mini speaker with powerful and dynamic sound. Compact and portable, perfect for any space and easy to carry anywhere.",
 			product: {
-				image: "https://images.unsplash.com/photo-1589003077984-894e133dabab?auto=format&fit=crop&w=100&q=80",
+				image:
+					"https://images.unsplash.com/photo-1589003077984-894e133dabab?auto=format&fit=crop&w=100&q=80",
 				name: "Portable Wireless Speakers Music Speakers New 2025",
 				price: "$135.00",
 				oldPrice: "$148.00",
@@ -156,7 +148,8 @@ function FeaturedProductSlider() {
 			description:
 				"Experience the next level of computing with ultra-fast processors and stunning retina display.",
 			product: {
-				image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=100&q=80",
+				image:
+					"https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=100&q=80",
 				name: "ProBook Ultra Slim 15-inch 2025 Edition",
 				price: "$999.00",
 				oldPrice: "$1200.00",
@@ -171,7 +164,8 @@ function FeaturedProductSlider() {
 			description:
 				"Active noise cancelling headphones that let you focus on what matters most. Crystal clear audio quality.",
 			product: {
-				image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=100&q=80",
+				image:
+					"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=100&q=80",
 				name: "Noise Cancelling Over-Ear Studio Headphones",
 				price: "$249.00",
 				oldPrice: "$300.00",
@@ -188,18 +182,18 @@ function FeaturedProductSlider() {
 	const currentSlide = slides[currentIndex];
 
 	return (
-		<div className="container mx-auto p-6">
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-125">
+		<div className="container mx-auto">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-100 2xl:min-h-125">
 				<div className="relative group h-100 xl:h-full overflow-hidden rounded-2xl">
 					<AnimatePresence mode="wait">
 						<motion.div
 							key={currentIndex}
-							initial={{ opacity: 0, x: 20 }}
+							initial={{ opacity: 0, x: 10 }}
 							animate={{ opacity: 1, x: 0 }}
-							exit={{ opacity: 0, x: -20 }}
+							exit={{ opacity: 0, x: -10 }}
 							transition={{
-								duration: 0.5,
-								ease: [0.4, 0, 0.2, 1],
+								duration: 0.4,
+								ease: "easeOut",
 							}}
 							className="absolute inset-0"
 						>
