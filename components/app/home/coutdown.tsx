@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type CountdownProps = {
 	targetDate: string | Date; // ví dụ: '2026-02-01T23:59:59'
@@ -29,24 +29,22 @@ function getTimeLeft(target: Date): TimeLeft {
 }
 
 export function Countdown({ targetDate }: CountdownProps) {
-	const target = new Date(targetDate);
-	const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
-		getTimeLeft(target),
-	);
+	const memoizedTarget = useMemo(() => new Date(targetDate), [targetDate]);
+	const fallbackTime: TimeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+	const [timeLeft, setTimeLeft] = useState<TimeLeft>(fallbackTime);
 
 	useEffect(() => {
-		const timer = setInterval(() => {
-			setTimeLeft(getTimeLeft(target));
-		}, 1000);
+		const updateTime = () => setTimeLeft(getTimeLeft(memoizedTarget));
+
+		updateTime();
+		const timer = setInterval(updateTime, 1000);
 
 		return () => clearInterval(timer);
-	}, [target]);
+	}, [memoizedTarget]);
 
 	return (
 		<div className="flex items-center gap-3">
-			<span className="font-semibold text-base">
-				Hurry up! Offer ends in:
-			</span>
+			<span className="font-semibold text-base">Hurry up! Offer ends in:</span>
 
 			<div className="flex gap-2">
 				<TimeBox value={timeLeft.days} />
