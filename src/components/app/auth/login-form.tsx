@@ -41,10 +41,7 @@ export function LoginForm() {
 		>
 			<Card className="w-full">
 				<CardHeader className="space-y-1 text-center">
-					<motion.div
-						whileHover={{ scale: 1.05 }}
-						className="flex items-center justify-center"
-					>
+					<motion.div className="flex items-center justify-center">
 						<Logo />
 					</motion.div>
 					<CardTitle className="text-2xl font-bold">

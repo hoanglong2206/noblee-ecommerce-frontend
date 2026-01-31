@@ -473,11 +473,7 @@ export function RegisterForm() {
 							/>
 						))}
 					</div>
-					{/* Logo */}
-					<motion.div
-						whileHover={{ scale: 1.05 }}
-						className="flex items-center justify-center"
-					>
+					<motion.div className="flex items-center justify-center">
 						<Logo />
 					</motion.div>
 					<CardTitle className="text-2xl font-bold">{stepInfo.title}</CardTitle>
