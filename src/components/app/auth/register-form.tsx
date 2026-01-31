@@ -23,26 +23,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "@/lib/icon";
 import { Logo } from "../home";
 import { cn } from "@/lib/utils";
-
-// Mock data - danh sách email đã tồn tại
-const EXISTING_EMAILS = [
-	"test@example.com",
-	"user@gmail.com",
-	"admin@company.com",
-];
-
-// Mock OTP code
-const MOCK_OTP = "123456";
+import {
+	useRegisterMutation,
+	useResendOtpMutation,
+	useSendOtpMutation,
+	useVerifyOtpMutation,
+} from "@/features/auth/query";
+import { isApiError } from "@/features/api-client";
+import { useRouter } from "next/navigation";
 
 // Step 1: Email Input
 function EmailStep({
 	email,
 	setEmail,
 	error,
+	disabled,
 }: {
 	email: string;
 	setEmail: (email: string) => void;
 	error: string;
+	disabled: boolean;
 }) {
 	return (
 		<div className="space-y-4">
@@ -57,6 +57,7 @@ function EmailStep({
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
 						className="pl-10"
+						disabled={disabled}
 					/>
 				</div>
 				{error && <p className="text-sm text-destructive">{error}</p>}
@@ -77,6 +78,7 @@ function OTPStep({
 	countdown,
 	onResend,
 	verifyAttempts,
+	resendPending,
 }: {
 	otp: string;
 	setOtp: (otp: string) => void;
@@ -85,6 +87,7 @@ function OTPStep({
 	countdown: number;
 	onResend: () => void;
 	verifyAttempts: number;
+	resendPending: boolean;
 }) {
 	return (
 		<div className="space-y-4">
@@ -124,15 +127,18 @@ function OTPStep({
 						variant="link"
 						className="text-sm p-0 h-auto"
 						onClick={onResend}
+						disabled={resendPending}
 					>
-						Resend verification code
+						{resendPending ? (
+							<>
+								<Loader2 className="mr-2 h-3 w-3 animate-spin" /> Resending...
+							</>
+						) : (
+							"Resend verification code"
+						)}
 					</Button>
 				)}
 			</div>
-
-			<p className="text-xs text-muted-foreground text-center">
-				(Demo: Use OTP code <span className="font-mono font-bold">123456</span>)
-			</p>
 		</div>
 	);
 }
@@ -147,6 +153,7 @@ function AccountDetailsStep({
 	showPassword,
 	setShowPassword,
 	errors,
+	disabled,
 }: {
 	email: string;
 	fullname: string;
@@ -155,7 +162,8 @@ function AccountDetailsStep({
 	setPassword: (password: string) => void;
 	showPassword: boolean;
 	setShowPassword: (show: boolean) => void;
-	errors: { fullname?: string; password?: string };
+	errors: { fullname?: string; password?: string; general?: string };
+	disabled: boolean;
 }) {
 	return (
 		<div className="space-y-4">
@@ -178,6 +186,7 @@ function AccountDetailsStep({
 					placeholder="Enter your full name"
 					value={fullname}
 					onChange={(e) => setFullname(e.target.value)}
+					disabled={disabled}
 				/>
 				{errors.fullname && (
 					<p className="text-sm text-destructive">{errors.fullname}</p>
@@ -194,6 +203,7 @@ function AccountDetailsStep({
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 						className="pr-10"
+						disabled={disabled}
 					/>
 					<Button
 						type="button"
@@ -215,6 +225,9 @@ function AccountDetailsStep({
 				<p className="text-xs text-muted-foreground">
 					Password must be at least 8 characters
 				</p>
+				{errors.general && (
+					<p className="text-sm text-destructive">{errors.general}</p>
+				)}
 			</div>
 		</div>
 	);
@@ -222,7 +235,6 @@ function AccountDetailsStep({
 
 export function RegisterForm() {
 	const [currentStep, setCurrentStep] = useState<number>(0);
-	const [loading, setLoading] = useState<boolean>(false);
 
 	// Step 1 state
 	const [email, setEmail] = useState<string>("");
@@ -241,7 +253,18 @@ export function RegisterForm() {
 	const [accountErrors, setAccountErrors] = useState<{
 		fullname?: string;
 		password?: string;
+		general?: string;
 	}>({});
+	const router = useRouter();
+	const sendOtpMutation = useSendOtpMutation();
+	const resendOtpMutation = useResendOtpMutation();
+	const verifyOtpMutation = useVerifyOtpMutation();
+	const registerMutation = useRegisterMutation();
+	const isSendPending = sendOtpMutation.isPending;
+	const isResendPending = resendOtpMutation.isPending;
+	const isVerifyPending = verifyOtpMutation.isPending;
+	const isRegisterPending = registerMutation.isPending;
+	const loading = isSendPending || isVerifyPending || isRegisterPending;
 
 	// Countdown timer for OTP resend
 	useEffect(() => {
@@ -266,86 +289,87 @@ export function RegisterForm() {
 	// Step 1: Check email
 	const handleEmailContinue = async () => {
 		setEmailError("");
-		setLoading(true);
-
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-
-		if (!email) {
+		const normalized = email.trim().toLowerCase();
+		if (!normalized) {
 			setEmailError("Please enter your email address");
-			setLoading(false);
 			return;
 		}
 
-		if (!isValidEmail(email)) {
+		if (!isValidEmail(normalized)) {
 			setEmailError("Please enter a valid email address");
-			setLoading(false);
 			return;
 		}
 
-		// Check if email already exists
-		if (EXISTING_EMAILS.includes(email.toLowerCase())) {
-			setEmailError(
-				"This email is already registered. Please use another email.",
-			);
-			setLoading(false);
-			return;
+		try {
+			await sendOtpMutation.mutateAsync({ email: normalized });
+			setEmail(normalized);
+			startOTPCountdown();
+			setVerifyAttempts(0);
+			setCurrentStep(1);
+		} catch (error) {
+			if (isApiError(error)) {
+				setEmailError(error.message || "Unable to send verification code.");
+			} else {
+				setEmailError("Unexpected error occurred. Please try again.");
+			}
 		}
-
-		// Success - move to OTP step
-		setLoading(false);
-		startOTPCountdown();
-		setVerifyAttempts(0);
-		setCurrentStep(1);
 	};
 
 	// Step 2: Verify OTP
 	const handleVerifyOTP = async () => {
 		setOtpError("");
-		setLoading(true);
-
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-
-		if (otp !== MOCK_OTP) {
-			const newAttempts = verifyAttempts + 1;
-			setVerifyAttempts(newAttempts);
-
-			if (newAttempts >= 3) {
-				setOtpError("Maximum attempts reached. Please request a new code.");
-				setOtp("");
-			} else {
-				setOtpError(
-					`Invalid verification code. ${3 - newAttempts} attempts remaining.`,
-				);
-			}
-			setLoading(false);
+		const normalized = email.trim().toLowerCase();
+		if (otp.length !== 6) {
+			setOtpError("Please enter the 6-digit verification code.");
 			return;
 		}
 
-		// Success - move to account details step
-		setLoading(false);
-		setCurrentStep(2);
+		try {
+			await verifyOtpMutation.mutateAsync({ email: normalized, otp });
+			setCurrentStep(2);
+			setVerifyAttempts(0);
+		} catch (error) {
+			const nextAttempts = verifyAttempts + 1;
+			setVerifyAttempts(nextAttempts);
+			if (isApiError(error)) {
+				setOtpError(error.message || "Invalid verification code.");
+			} else {
+				setOtpError("Unexpected error occurred. Please try again.");
+			}
+			if (nextAttempts >= 3) {
+				setOtp("");
+				setOtpError("Maximum attempts reached. Please request a new code.");
+			}
+		}
 	};
 
 	// Resend OTP
-	const handleResendOTP = () => {
+	const handleResendOTP = async () => {
+		if (countdown > 0 || isResendPending) {
+			return;
+		}
 		setVerifyAttempts(0);
-		startOTPCountdown();
-		// Here you would trigger the API to resend OTP
+		setOtpError("");
+		const normalized = email.trim().toLowerCase();
+		try {
+			await resendOtpMutation.mutateAsync({ email: normalized });
+			startOTPCountdown();
+		} catch (error) {
+			if (isApiError(error)) {
+				setOtpError(error.message || "Failed to resend verification code.");
+			} else {
+				setOtpError("Unexpected error occurred. Please try again.");
+			}
+		}
 	};
 
 	// Step 3: Create account
 	const handleCreateAccount = async () => {
 		setAccountErrors({});
-		setLoading(true);
-
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-
 		const errors: { fullname?: string; password?: string } = {};
 
-		if (!fullname.trim()) {
+		const trimmedName = fullname.trim();
+		if (!trimmedName) {
 			errors.fullname = "Please enter your full name";
 		}
 
@@ -357,15 +381,45 @@ export function RegisterForm() {
 
 		if (Object.keys(errors).length > 0) {
 			setAccountErrors(errors);
-			setLoading(false);
 			return;
 		}
 
-		// Success - account created
-		setLoading(false);
-		alert(
-			`Account created successfully!\n\nEmail: ${email}\nName: ${fullname}`,
-		);
+		try {
+			await registerMutation.mutateAsync({
+				email: email.trim().toLowerCase(),
+				fullname: trimmedName,
+				password,
+			});
+			setAccountErrors({});
+			router.replace("/");
+		} catch (error) {
+			if (isApiError(error)) {
+				const details = error.details ?? {};
+				const resolveDetail = (value?: string | string[]) => {
+					if (!value) {
+						return undefined;
+					}
+					return Array.isArray(value) ? value.join(" ") : value;
+				};
+				const nextErrors: {
+					fullname?: string;
+					password?: string;
+					general?: string;
+				} = {
+					fullname: resolveDetail(details?.fullname as string | string[]),
+					password: resolveDetail(details?.password as string | string[]),
+				};
+				nextErrors.general =
+					nextErrors.fullname || nextErrors.password
+						? error.message || "Registration failed."
+						: error.message || "Registration failed.";
+				setAccountErrors(nextErrors);
+			} else {
+				setAccountErrors({
+					general: "Unexpected error occurred. Please try again.",
+				});
+			}
+		}
 	};
 
 	// Go back to previous step
@@ -494,6 +548,7 @@ export function RegisterForm() {
 									email={email}
 									setEmail={setEmail}
 									error={emailError}
+									disabled={loading}
 								/>
 							)}
 							{currentStep === 1 && (
@@ -505,6 +560,7 @@ export function RegisterForm() {
 									countdown={countdown}
 									onResend={handleResendOTP}
 									verifyAttempts={verifyAttempts}
+									resendPending={isResendPending}
 								/>
 							)}
 							{currentStep === 2 && (
@@ -517,6 +573,7 @@ export function RegisterForm() {
 									showPassword={showPassword}
 									setShowPassword={setShowPassword}
 									errors={accountErrors}
+									disabled={loading}
 								/>
 							)}
 						</motion.div>

@@ -18,17 +18,40 @@ import {
 import { motion } from "framer-motion";
 import { Logo } from "@/components/app/home";
 import { Icons } from "@/lib/icon";
+import { useLoginMutation } from "@/features/auth/query";
+import { isApiError } from "@/features/api-client";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
 	const [email, setEmail] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
+	const [formError, setFormError] = useState<string>("");
+	const router = useRouter();
+	const loginMutation = useLoginMutation({
+		onSuccess: () => {
+			setFormError("");
+			router.replace("/");
+		},
+	});
+	const isSubmitting = loginMutation.isPending;
 
 	async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
+		setFormError("");
 
 		if (!email && !password) {
 			return;
+		}
+
+		try {
+			await loginMutation.mutateAsync({ email, password });
+		} catch (error) {
+			if (isApiError(error)) {
+				setFormError(error.message || "Unable to sign in.");
+			} else {
+				setFormError("Unexpected error occurred. Please try again.");
+			}
 		}
 	}
 
@@ -65,6 +88,7 @@ export function LoginForm() {
 									placeholder="name@example.com"
 									value={email}
 									onChange={(event) => setEmail(event.target.value)}
+									disabled={isSubmitting}
 								/>
 							</div>
 							<div className="space-y-2">
@@ -78,6 +102,7 @@ export function LoginForm() {
 										placeholder="Enter your password"
 										value={password}
 										onChange={(event) => setPassword(event.target.value)}
+										disabled={isSubmitting}
 									/>
 									<Button
 										type="button"
@@ -102,11 +127,23 @@ export function LoginForm() {
 										Forgot password?
 									</Link>
 								</div>
+								{formError && (
+									<p className="text-sm text-destructive">{formError}</p>
+								)}
 							</div>
 						</motion.div>
 					</CardContent>
 					<CardFooter className="flex flex-col gap-4 px-8">
-						<Button className="w-full">Sign In</Button>
+						<Button type="submit" className="w-full" disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Signing In...
+								</>
+							) : (
+								"Sign In"
+							)}
+						</Button>
 						<div className="relative w-full">
 							<div className="absolute inset-0 flex items-center">
 								<span className="w-full border-t"></span>
