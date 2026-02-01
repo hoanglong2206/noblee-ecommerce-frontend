@@ -44,6 +44,7 @@ export const apiClient: AxiosInstance = axios.create({
 	withCredentials: true,
 	headers: {
 		"Content-Type": "application/json",
+		Accept: "application/json",
 	},
 	timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT ?? 15000),
 	httpsAgent: new https.Agent({
@@ -80,35 +81,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
 	(response) => response,
 	async (error: AxiosError<ApiErrorPayload>) => {
-		const originalRequest = error.config as InternalAxiosRequestConfig & {
-			_retry?: boolean;
-		};
-
-		if (!originalRequest._retry && error.response?.status === 401) {
-			originalRequest._retry = true;
-			try {
-				const { data } = await apiClient.post("/auth/refresh");
-
-				if (data?.accessToken) {
-					localStorage.setItem("access_token", data.accessToken);
-					return apiClient(originalRequest);
-				}
-			} catch (refreshError) {
-				if (typeof window !== "undefined") {
-					localStorage.removeItem("access_token");
-					window.location.href = "/login";
-				}
-				return Promise.reject(
-					normalizeError(refreshError as AxiosError<ApiErrorPayload>),
-				);
-			}
+		if (axios.isAxiosError(error)) {
+			return Promise.reject(normalizeError(error));
 		}
-
-		if (error.response?.status === 403) {
-			if (typeof window !== "undefined") {
-				window.location.href = "/forbidden";
-			}
-		}
+		return Promise.reject(error);
 	},
 );
 

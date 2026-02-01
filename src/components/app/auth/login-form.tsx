@@ -21,16 +21,17 @@ import { Icons } from "@/lib/icon";
 import { useLoginMutation } from "@/features/auth/query";
 import { isApiError } from "@/features/api-client";
 import { useRouter } from "next/navigation";
+import { useToastStore } from "@/store/useToastStore";
 
 export function LoginForm() {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
 	const [email, setEmail] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
-	const [formError, setFormError] = useState<string>("");
+	const addToast = useToastStore((state) => state.addToast);
 	const router = useRouter();
 	const loginMutation = useLoginMutation({
 		onSuccess: () => {
-			setFormError("");
+			addToast("Signed in successfully.", "success");
 			router.replace("/");
 		},
 	});
@@ -38,9 +39,8 @@ export function LoginForm() {
 
 	async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
-		setFormError("");
-
-		if (!email && !password) {
+		if (!email || !password) {
+			addToast("Please enter your email and password.", "error");
 			return;
 		}
 
@@ -48,9 +48,13 @@ export function LoginForm() {
 			await loginMutation.mutateAsync({ email, password });
 		} catch (error) {
 			if (isApiError(error)) {
-				setFormError(error.message || "Unable to sign in.");
+				const serverMessage =
+					error.raw.response?.data?.message ||
+					error.message ||
+					"Unable to sign in.";
+				addToast(serverMessage, "error");
 			} else {
-				setFormError("Unexpected error occurred. Please try again.");
+				addToast("Unexpected error occurred. Please try again.", "error");
 			}
 		}
 	}
@@ -127,9 +131,6 @@ export function LoginForm() {
 										Forgot password?
 									</Link>
 								</div>
-								{formError && (
-									<p className="text-sm text-destructive">{formError}</p>
-								)}
 							</div>
 						</motion.div>
 					</CardContent>

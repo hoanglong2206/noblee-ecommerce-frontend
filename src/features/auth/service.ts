@@ -14,7 +14,7 @@ import {
 	VerifyOtpPayload,
 	VerifyOtpResponse,
 } from "./type";
-import { clearStoredAccessToken, storeAccessToken } from "./token";
+import { deleteFromLocalStorage, saveToLocalStorage } from "@/lib/utils";
 
 type ApiErrorPayload = {
 	message?: string;
@@ -94,7 +94,7 @@ const register = async (payload: RegisterPayload): Promise<AuthResponse> => {
 			payload,
 		);
 		const data = ensureResponse(response);
-		storeAccessToken(data.tokens.accessToken);
+		saveToLocalStorage("access_token", data.tokens.accessToken);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -105,7 +105,7 @@ const login = async (payload: LoginPayload): Promise<AuthResponse> => {
 	try {
 		const response = await apiClient.post<AuthResponse>("/auth/login", payload);
 		const data = ensureResponse(response);
-		storeAccessToken(data.tokens.accessToken);
+		saveToLocalStorage("access_token", data.tokens.accessToken);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -121,7 +121,7 @@ const refreshTokens = async (
 			payload,
 		);
 		const data = ensureResponse(response);
-		storeAccessToken(data.tokens.accessToken);
+		saveToLocalStorage("access_token", data.tokens.accessToken);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -132,9 +132,8 @@ const logout = async (): Promise<void> => {
 	try {
 		const response = await apiClient.post<LogoutResponse>("/auth/logout");
 		ensureResponse(response);
-		clearStoredAccessToken();
+		deleteFromLocalStorage("access_token");
 	} catch (error) {
-		clearStoredAccessToken();
 		return throwApiError(error);
 	}
 };

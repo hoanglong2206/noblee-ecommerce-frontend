@@ -31,17 +31,16 @@ import {
 } from "@/features/auth/query";
 import { isApiError } from "@/features/api-client";
 import { useRouter } from "next/navigation";
+import { useToastStore } from "@/store/useToastStore";
 
 // Step 1: Email Input
 function EmailStep({
 	email,
 	setEmail,
-	error,
 	disabled,
 }: {
 	email: string;
 	setEmail: (email: string) => void;
-	error: string;
 	disabled: boolean;
 }) {
 	return (
@@ -60,7 +59,6 @@ function EmailStep({
 						disabled={disabled}
 					/>
 				</div>
-				{error && <p className="text-sm text-destructive">{error}</p>}
 			</div>
 			<p className="text-xs text-muted-foreground">
 				We&apos;ll send a verification code to this email address.
@@ -74,7 +72,6 @@ function OTPStep({
 	otp,
 	setOtp,
 	email,
-	error,
 	countdown,
 	onResend,
 	verifyAttempts,
@@ -83,7 +80,6 @@ function OTPStep({
 	otp: string;
 	setOtp: (otp: string) => void;
 	email: string;
-	error: string;
 	countdown: number;
 	onResend: () => void;
 	verifyAttempts: number;
@@ -110,8 +106,6 @@ function OTPStep({
 					</InputOTPGroup>
 				</InputOTP>
 			</div>
-
-			{error && <p className="text-sm text-destructive text-center">{error}</p>}
 
 			<div className="text-center space-y-2">
 				<p className="text-xs text-muted-foreground">
@@ -152,7 +146,6 @@ function AccountDetailsStep({
 	setPassword,
 	showPassword,
 	setShowPassword,
-	errors,
 	disabled,
 }: {
 	email: string;
@@ -162,7 +155,6 @@ function AccountDetailsStep({
 	setPassword: (password: string) => void;
 	showPassword: boolean;
 	setShowPassword: (show: boolean) => void;
-	errors: { fullname?: string; password?: string; general?: string };
 	disabled: boolean;
 }) {
 	return (
@@ -188,9 +180,6 @@ function AccountDetailsStep({
 					onChange={(e) => setFullname(e.target.value)}
 					disabled={disabled}
 				/>
-				{errors.fullname && (
-					<p className="text-sm text-destructive">{errors.fullname}</p>
-				)}
 			</div>
 
 			<div className="space-y-2">
@@ -219,15 +208,9 @@ function AccountDetailsStep({
 						)}
 					</Button>
 				</div>
-				{errors.password && (
-					<p className="text-sm text-destructive">{errors.password}</p>
-				)}
 				<p className="text-xs text-muted-foreground">
 					Password must be at least 8 characters
 				</p>
-				{errors.general && (
-					<p className="text-sm text-destructive">{errors.general}</p>
-				)}
 			</div>
 		</div>
 	);
@@ -238,11 +221,9 @@ export function RegisterForm() {
 
 	// Step 1 state
 	const [email, setEmail] = useState<string>("");
-	const [emailError, setEmailError] = useState<string>("");
 
 	// Step 2 state
 	const [otp, setOtp] = useState<string>("");
-	const [otpError, setOtpError] = useState<string>("");
 	const [countdown, setCountdown] = useState<number>(60);
 	const [verifyAttempts, setVerifyAttempts] = useState<number>(0);
 
@@ -250,12 +231,8 @@ export function RegisterForm() {
 	const [fullname, setFullname] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
 	const [showPassword, setShowPassword] = useState<boolean>(false);
-	const [accountErrors, setAccountErrors] = useState<{
-		fullname?: string;
-		password?: string;
-		general?: string;
-	}>({});
 	const router = useRouter();
+	const addToast = useToastStore((state) => state.addToast);
 	const sendOtpMutation = useSendOtpMutation();
 	const resendOtpMutation = useResendOtpMutation();
 	const verifyOtpMutation = useVerifyOtpMutation();
@@ -278,7 +255,6 @@ export function RegisterForm() {
 	const startOTPCountdown = useCallback(() => {
 		setCountdown(60);
 		setOtp("");
-		setOtpError("");
 	}, []);
 
 	// Validate email format
@@ -288,15 +264,14 @@ export function RegisterForm() {
 
 	// Step 1: Check email
 	const handleEmailContinue = async () => {
-		setEmailError("");
 		const normalized = email.trim().toLowerCase();
 		if (!normalized) {
-			setEmailError("Please enter your email address");
+			addToast("Please enter your email address", "error");
 			return;
 		}
 
 		if (!isValidEmail(normalized)) {
-			setEmailError("Please enter a valid email address");
+			addToast("Please enter a valid email address", "error");
 			return;
 		}
 
@@ -306,21 +281,21 @@ export function RegisterForm() {
 			startOTPCountdown();
 			setVerifyAttempts(0);
 			setCurrentStep(1);
+			addToast("Verification code sent.", "success");
 		} catch (error) {
 			if (isApiError(error)) {
-				setEmailError(error.message || "Unable to send verification code.");
+				addToast(error.message || "Unable to send verification code.", "error");
 			} else {
-				setEmailError("Unexpected error occurred. Please try again.");
+				addToast("Unexpected error occurred. Please try again.", "error");
 			}
 		}
 	};
 
 	// Step 2: Verify OTP
 	const handleVerifyOTP = async () => {
-		setOtpError("");
 		const normalized = email.trim().toLowerCase();
 		if (otp.length !== 6) {
-			setOtpError("Please enter the 6-digit verification code.");
+			addToast("Please enter the 6-digit verification code.", "error");
 			return;
 		}
 
@@ -328,17 +303,21 @@ export function RegisterForm() {
 			await verifyOtpMutation.mutateAsync({ email: normalized, otp });
 			setCurrentStep(2);
 			setVerifyAttempts(0);
+			addToast("Email verified successfully.", "success");
 		} catch (error) {
 			const nextAttempts = verifyAttempts + 1;
 			setVerifyAttempts(nextAttempts);
 			if (isApiError(error)) {
-				setOtpError(error.message || "Invalid verification code.");
+				addToast(error.message || "Invalid verification code.", "error");
 			} else {
-				setOtpError("Unexpected error occurred. Please try again.");
+				addToast("Unexpected error occurred. Please try again.", "error");
 			}
 			if (nextAttempts >= 3) {
 				setOtp("");
-				setOtpError("Maximum attempts reached. Please request a new code.");
+				addToast(
+					"Maximum attempts reached. Please request a new code.",
+					"error",
+				);
 			}
 		}
 	};
@@ -349,38 +328,38 @@ export function RegisterForm() {
 			return;
 		}
 		setVerifyAttempts(0);
-		setOtpError("");
 		const normalized = email.trim().toLowerCase();
 		try {
 			await resendOtpMutation.mutateAsync({ email: normalized });
 			startOTPCountdown();
+			addToast("Verification code resent.", "info");
 		} catch (error) {
 			if (isApiError(error)) {
-				setOtpError(error.message || "Failed to resend verification code.");
+				addToast(
+					error.message || "Failed to resend verification code.",
+					"error",
+				);
 			} else {
-				setOtpError("Unexpected error occurred. Please try again.");
+				addToast("Unexpected error occurred. Please try again.", "error");
 			}
 		}
 	};
 
 	// Step 3: Create account
 	const handleCreateAccount = async () => {
-		setAccountErrors({});
-		const errors: { fullname?: string; password?: string } = {};
-
 		const trimmedName = fullname.trim();
 		if (!trimmedName) {
-			errors.fullname = "Please enter your full name";
+			addToast("Please enter your full name", "error");
+			return;
 		}
 
 		if (!password) {
-			errors.password = "Please create a password";
-		} else if (password.length < 8) {
-			errors.password = "Password must be at least 8 characters";
+			addToast("Please create a password", "error");
+			return;
 		}
 
-		if (Object.keys(errors).length > 0) {
-			setAccountErrors(errors);
+		if (password.length < 8) {
+			addToast("Password must be at least 8 characters", "error");
 			return;
 		}
 
@@ -390,7 +369,7 @@ export function RegisterForm() {
 				fullname: trimmedName,
 				password,
 			});
-			setAccountErrors({});
+			addToast("Account created successfully.", "success");
 			router.replace("/");
 		} catch (error) {
 			if (isApiError(error)) {
@@ -413,11 +392,16 @@ export function RegisterForm() {
 					nextErrors.fullname || nextErrors.password
 						? error.message || "Registration failed."
 						: error.message || "Registration failed.";
-				setAccountErrors(nextErrors);
+				const messages = [
+					nextErrors.fullname,
+					nextErrors.password,
+					nextErrors.general,
+				].filter(Boolean) as string[];
+				if (messages.length) {
+					messages.forEach((message) => addToast(message, "error"));
+				}
 			} else {
-				setAccountErrors({
-					general: "Unexpected error occurred. Please try again.",
-				});
+				addToast("Unexpected error occurred. Please try again.", "error");
 			}
 		}
 	};
@@ -547,7 +531,6 @@ export function RegisterForm() {
 								<EmailStep
 									email={email}
 									setEmail={setEmail}
-									error={emailError}
 									disabled={loading}
 								/>
 							)}
@@ -556,7 +539,6 @@ export function RegisterForm() {
 									otp={otp}
 									setOtp={setOtp}
 									email={email}
-									error={otpError}
 									countdown={countdown}
 									onResend={handleResendOTP}
 									verifyAttempts={verifyAttempts}
@@ -572,7 +554,6 @@ export function RegisterForm() {
 									setPassword={setPassword}
 									showPassword={showPassword}
 									setShowPassword={setShowPassword}
-									errors={accountErrors}
 									disabled={loading}
 								/>
 							)}
