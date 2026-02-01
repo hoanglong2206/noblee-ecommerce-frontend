@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	X,
 	SearchIcon,
@@ -26,13 +26,77 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { CarouselAds, Logo } from "@/components/app/home";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { cn, stringToColor } from "@/lib/utils";
+import { usePathname, useRouter } from "next/navigation";
+import { NavUser } from "@/components/app/admin/nav-user";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useUserProfileQuery, userQueryKeys } from "@/features/user/query";
+import { useLogoutMutation } from "@/features/auth/query";
+import { useToastStore } from "@/store/useToastStore";
+import { Skeleton } from "@/components/ui/skeleton";
+import { isApiError } from "@/features/api-client";
 
 export const Header = () => {
 	const [showBanner, setShowBanner] = useState<boolean>(true);
 	const [lang, setLang] = useState<string>("en");
 	const pathName = usePathname();
+	const router = useRouter();
+	const addToast = useToastStore((state) => state.addToast);
+	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+	useEffect(() => {
+		void useAuthStore.getState().checkAuth();
+	}, []);
+
+	const { data: profile, isLoading: isProfileLoading } = useUserProfileQuery({
+		queryKey: userQueryKeys.profile(),
+		enabled: isAuthenticated,
+		retry: false,
+	});
+
+	const logoutMutation = useLogoutMutation({
+		onSuccess: () => {
+			addToast("Signed out successfully.", "success");
+			router.replace("/login");
+		},
+	});
+
+	const handleLogout = async (): Promise<void> => {
+		if (logoutMutation.isPending) {
+			return;
+		}
+		try {
+			await logoutMutation.mutateAsync();
+		} catch (error) {
+			if (isApiError(error)) {
+				addToast(error.message || "Unable to sign out.", "error");
+			} else {
+				addToast("Unexpected error occurred. Please try again.", "error");
+			}
+		}
+	};
+
+	const navUserData = useMemo(() => {
+		if (profile) {
+			const displayName = profile.fullName?.trim() || profile.email;
+			return {
+				name: displayName,
+				email: profile.email,
+				avatar: profile.avatarUrl ?? "",
+				colorAvatar: stringToColor(displayName),
+			};
+		}
+		if (!isAuthenticated || isProfileLoading) {
+			return null;
+		}
+		const fallbackName = "Account";
+		return {
+			name: fallbackName,
+			email: "",
+			avatar: "",
+			colorAvatar: stringToColor(fallbackName),
+		};
+	}, [isAuthenticated, isProfileLoading, profile]);
 
 	const handleCloseBanner = () => {
 		setShowBanner(false);
@@ -88,31 +152,23 @@ export const Header = () => {
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align="start">
-										<DropdownMenuItem
-											onClick={() => setLang("en")}
-										>
+										<DropdownMenuItem onClick={() => setLang("en")}>
 											<Image
 												src="/flag-english.png"
 												alt="lang"
 												width={20}
 												height={20}
 											/>
-											<span className="ml-2">
-												English
-											</span>
+											<span className="ml-2">English</span>
 										</DropdownMenuItem>
-										<DropdownMenuItem
-											onClick={() => setLang("vi")}
-										>
+										<DropdownMenuItem onClick={() => setLang("vi")}>
 											<Image
 												src="/flag-vietnamese.png"
 												alt="lang"
 												width={20}
 												height={20}
 											/>
-											<span className="ml-2">
-												Vietnamese
-											</span>
+											<span className="ml-2">Vietnamese</span>
 										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>
@@ -135,7 +191,7 @@ export const Header = () => {
 			</AnimatePresence>
 
 			{/* Header */}
-			<header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur shadow-sm">
+			<header className="sticky top-0 z-15 w-full bg-background/95 backdrop-blur shadow-sm">
 				<div className="container flex h-16 items-center justify-between mx-auto">
 					<motion.div
 						initial={{ opacity: 0, x: -20 }}
@@ -196,20 +252,24 @@ export const Header = () => {
 						<SearchIcon className="h-6 w-6 hover:text-primary cursor-pointer transition-colors" />
 						<Separator orientation="vertical" />
 						<div className="flex items-center gap-4">
-							<div className="hover:text-primary cursor-pointer transition-colors size-6 flex items-center justify-center relative">
-								<span className="absolute -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-[#DC3545]">
-									<span className="absolute right-0 -z-1 inline-flex h-full w-full animate-ping rounded-full bg-[#DC3545] opacity-75"></span>
-								</span>
-								<Bell className="h-6 w-6" />
-							</div>
-							<div className="hover:text-primary cursor-pointer transition-colors size-6 flex items-center justify-center relative">
-								<div className="absolute -top-1 -right-1.5 z-1 h-4 w-4 rounded-full bg-[#4570f1] flex items-center justify-center">
-									<span className="text-background text-[10px] font-medium">
-										1
-									</span>
-								</div>
-								<Heart className="h-6 w-6" />
-							</div>
+							{isAuthenticated && (
+								<>
+									<div className="hover:text-primary cursor-pointer transition-colors size-6 flex items-center justify-center relative">
+										<span className="absolute -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-[#DC3545]">
+											<span className="absolute right-0 -z-1 inline-flex h-full w-full animate-ping rounded-full bg-[#DC3545] opacity-75"></span>
+										</span>
+										<Bell className="h-6 w-6" />
+									</div>
+									<div className="hover:text-primary cursor-pointer transition-colors size-6 flex items-center justify-center relative">
+										<div className="absolute -top-1 -right-1.5 z-1 h-4 w-4 rounded-full bg-[#4570f1] flex items-center justify-center">
+											<span className="text-background text-[10px] font-medium">
+												1
+											</span>
+										</div>
+										<Heart className="h-6 w-6" />
+									</div>
+								</>
+							)}
 							<div className="hover:text-primary cursor-pointer transition-colors size-6 flex items-center justify-center relative">
 								<div className="absolute -top-1 -right-2 z-1 h-4 w-4 rounded-full bg-[#4570f1] flex items-center justify-center">
 									<span className="text-background text-[10px] font-medium">
@@ -219,14 +279,27 @@ export const Header = () => {
 								<ShoppingCart className="h-6 w-6" />
 							</div>
 						</div>
-						<Separator orientation="vertical" />
-						<Link
-							href="/login"
-							className="hover:text-primary font-medium cursor-pointer transition-colors gap-1 size-6 flex items-center justify-center w-fit"
-						>
-							<User className="h-6 w-6" />
-							Sign in
-						</Link>
+						{isAuthenticated ? (
+							<>
+								<Separator orientation="vertical" />
+								{navUserData ? (
+									<NavUser user={navUserData} onLogout={handleLogout} />
+								) : (
+									<Skeleton className="size-10 rounded-full" />
+								)}
+							</>
+						) : (
+							<>
+								<Separator orientation="vertical" />
+								<Link
+									href="/login"
+									className="hover:text-primary font-medium cursor-pointer transition-colors gap-1 size-6 flex items-center justify-center w-fit"
+								>
+									<User className="h-6 w-6" />
+									Sign in
+								</Link>
+							</>
+						)}
 					</motion.div>
 				</div>
 			</header>

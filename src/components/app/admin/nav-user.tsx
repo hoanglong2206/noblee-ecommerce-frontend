@@ -15,6 +15,7 @@ import Link from "next/link";
 
 export function NavUser({
 	user,
+	onLogout,
 }: {
 	user: {
 		name: string;
@@ -22,6 +23,7 @@ export function NavUser({
 		avatar: string;
 		colorAvatar?: string;
 	};
+	onLogout?: () => void;
 }) {
 	return (
 		<DropdownMenu>
@@ -29,6 +31,7 @@ export function NavUser({
 				<Avatar className="size-10 group-has-data-[collapsible=icon]/sidebar-wrapper:size-8 cursor-pointer">
 					<AvatarImage src={user.avatar || undefined} alt={user.name} />
 					<AvatarFallback
+						className="text-background font-medium"
 						style={{
 							backgroundColor: user.colorAvatar || "",
 						}}
@@ -48,7 +51,7 @@ export function NavUser({
 							alt={user.name || "r"}
 						/>
 						<AvatarFallback
-							className="text-lg tracking-wider"
+							className="text-lg tracking-wider text-background font-medium"
 							style={{
 								backgroundColor: user.colorAvatar || "",
 							}}
@@ -84,7 +87,10 @@ export function NavUser({
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem className="text-red-500 focus:text-red-500 cursor-pointer">
+				<DropdownMenuItem
+					className="text-red-500 focus:text-red-500 cursor-pointer"
+					onSelect={() => onLogout?.()}
+				>
 					<LogOut className="mr-2 h-4 w-4" />
 					Log out
 				</DropdownMenuItem>

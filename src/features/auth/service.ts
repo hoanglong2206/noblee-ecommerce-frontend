@@ -14,7 +14,7 @@ import {
 	VerifyOtpPayload,
 	VerifyOtpResponse,
 } from "./type";
-import { deleteFromLocalStorage, saveToLocalStorage } from "@/lib/utils";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type ApiErrorPayload = {
 	message?: string;
@@ -94,7 +94,9 @@ const register = async (payload: RegisterPayload): Promise<AuthResponse> => {
 			payload,
 		);
 		const data = ensureResponse(response);
-		saveToLocalStorage("access_token", data.tokens.accessToken);
+		useAuthStore
+			.getState()
+			.login(data.tokens.accessToken, data.tokens.accessTokenExpiresIn);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -105,7 +107,9 @@ const login = async (payload: LoginPayload): Promise<AuthResponse> => {
 	try {
 		const response = await apiClient.post<AuthResponse>("/auth/login", payload);
 		const data = ensureResponse(response);
-		saveToLocalStorage("access_token", data.tokens.accessToken);
+		useAuthStore
+			.getState()
+			.login(data.tokens.accessToken, data.tokens.accessTokenExpiresIn);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -121,7 +125,9 @@ const refreshTokens = async (
 			payload,
 		);
 		const data = ensureResponse(response);
-		saveToLocalStorage("access_token", data.tokens.accessToken);
+		useAuthStore
+			.getState()
+			.login(data.tokens.accessToken, data.tokens.accessTokenExpiresIn);
 		return data;
 	} catch (error) {
 		return throwApiError(error);
@@ -132,7 +138,7 @@ const logout = async (): Promise<void> => {
 	try {
 		const response = await apiClient.post<LogoutResponse>("/auth/logout");
 		ensureResponse(response);
-		deleteFromLocalStorage("access_token");
+		useAuthStore.getState().logout();
 	} catch (error) {
 		return throwApiError(error);
 	}

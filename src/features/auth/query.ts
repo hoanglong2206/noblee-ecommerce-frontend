@@ -19,7 +19,6 @@ import {
 	VerifyOtpResponse,
 } from "./type";
 import { userQueryKeys } from "@/features/user/query";
-import { useAuthStore } from "@/store/useAuthStore";
 
 export const authQueryKeys = {
 	base: ["auth"] as const,
@@ -77,12 +76,10 @@ export const useRegisterMutation = (
 	>,
 ) => {
 	const queryClient = useQueryClient();
-	const setUser = useAuthStore((state) => state.setUser);
 	return useMutation<AuthResponse, ApiError, RegisterPayload, unknown>({
 		mutationFn: authService.register,
 		...options,
 		onSuccess: (data, variables, context, mutation) => {
-			setUser(data.user);
 			queryClient.setQueryData(authQueryKeys.me(), data.user);
 			queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });
 			queryClient.invalidateQueries({ queryKey: userQueryKeys.addresses() });
@@ -95,12 +92,10 @@ export const useLoginMutation = (
 	options?: UseMutationOptions<AuthResponse, ApiError, LoginPayload, unknown>,
 ) => {
 	const queryClient = useQueryClient();
-	const setUser = useAuthStore((state) => state.setUser);
 	return useMutation<AuthResponse, ApiError, LoginPayload, unknown>({
 		mutationFn: authService.login,
 		...options,
 		onSuccess: (data, variables, context, mutation) => {
-			setUser(data.user);
 			queryClient.setQueryData(authQueryKeys.me(), data.user);
 			queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });
 			queryClient.invalidateQueries({ queryKey: userQueryKeys.addresses() });
@@ -118,7 +113,6 @@ export const useRefreshTokensMutation = (
 	>,
 ) => {
 	const queryClient = useQueryClient();
-	const setUser = useAuthStore((state) => state.setUser);
 	return useMutation<
 		AuthResponse,
 		ApiError,
@@ -128,7 +122,6 @@ export const useRefreshTokensMutation = (
 		mutationFn: authService.refreshTokens,
 		...options,
 		onSuccess: (data, variables, context, mutation) => {
-			setUser(data.user);
 			queryClient.setQueryData(authQueryKeys.me(), data.user);
 			queryClient.invalidateQueries({ queryKey: userQueryKeys.profile() });
 			options?.onSuccess?.(data, variables, context, mutation);
@@ -140,12 +133,10 @@ export const useLogoutMutation = (
 	options?: UseMutationOptions<void, ApiError, void, unknown>,
 ) => {
 	const queryClient = useQueryClient();
-	const clearUser = useAuthStore((state) => state.clearUser);
 	return useMutation<void, ApiError, void, unknown>({
 		mutationFn: authService.logout,
 		...options,
 		onSuccess: (data, variables, context, mutation) => {
-			clearUser();
 			queryClient.removeQueries({ queryKey: authQueryKeys.base });
 			queryClient.removeQueries({ queryKey: userQueryKeys.base });
 			options?.onSuccess?.(data, variables, context, mutation);
