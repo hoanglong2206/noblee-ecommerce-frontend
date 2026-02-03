@@ -55,7 +55,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<SidebarInset className="overflow-hidden">
+			<SidebarInset className="flex h-screen flex-col overflow-hidden">
 				<header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b pr-4">
 					<div className="flex items-center gap-2 px-4">
 						<SidebarTrigger className="-ml-1" />
@@ -111,7 +111,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
 						/>
 					</div>
 				</header>
-				<div className="flex flex-1 flex-col">{children}</div>
+				{/* Main Content */}
+				<div className="flex flex-1 flex-col overflow-hidden">
+					<main className="flex-1 overflow-y-auto">{children}</main>
+				</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);
