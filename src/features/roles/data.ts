@@ -425,18 +425,6 @@ export const roleMapping: RoleMapping = {
 			permission: "products:read",
 		},
 		{
-			permission: "customers:read",
-			conditions: {
-				owner: "${userId}",
-			},
-		},
-		{
-			permission: "customers:update",
-			conditions: {
-				owner: "${userId}",
-			},
-		},
-		{
 			permission: "orders:list",
 			conditions: {
 				owner: "${userId}",

@@ -335,9 +335,6 @@ const PermissionAll = ({
 											(item) => item.action === action,
 										);
 										const isChecked = Boolean(actionEntry);
-										const conditionText = actionEntry?.conditions
-											? formatConditions(actionEntry.conditions)
-											: "";
 										return (
 											<label
 												key={`${resource}-${action}`}
@@ -350,14 +347,14 @@ const PermissionAll = ({
 														onToggleAction(resource, action, Boolean(checked))
 													}
 												/>
-												<div className="flex flex-col gap-1">
+												<div className="flex items-center gap-2">
 													<span className="capitalize">
 														{formatActionLabel(action)}
 													</span>
-													{conditionText ? (
-														<span className="text-xs text-muted-foreground">
-															{conditionText}
-														</span>
+													{actionEntry?.conditions ? (
+														<Badge variant="outline" className="text-xs">
+															Condition
+														</Badge>
 													) : null}
 												</div>
 											</label>
@@ -376,18 +373,48 @@ const PermissionAll = ({
 type PermissionSelectedProps = {
 	assignedRecord: Partial<Record<Resource, AssignedAction[]>>;
 	extras: RolePermissionEntry[];
+	visibleResources: Resource[];
+	isFilteringActive: boolean;
 };
 
 const PermissionSelected = ({
 	assignedRecord,
 	extras,
+	visibleResources,
+	isFilteringActive,
 }: PermissionSelectedProps) => {
-	const resourceEntries = useMemo(
-		() => Object.entries(assignedRecord).sort(([a], [b]) => a.localeCompare(b)),
-		[assignedRecord],
+	const visibleSet = useMemo(
+		() => new Set<Resource>(visibleResources),
+		[visibleResources],
 	);
 
-	if (!resourceEntries.length && !extras.length) {
+	const resourceEntries = useMemo(() => {
+		const entries = Object.entries(assignedRecord).filter(([resource]) => {
+			if (!isFilteringActive) {
+				return true;
+			}
+			return visibleSet.has(resource as Resource);
+		});
+		return entries.sort(([a], [b]) => a.localeCompare(b));
+	}, [assignedRecord, isFilteringActive, visibleSet]);
+
+	const filteredExtras = useMemo(() => {
+		if (!isFilteringActive) {
+			return extras;
+		}
+		return extras.filter((entry) => {
+			if (entry.permission === "*:*") {
+				return false;
+			}
+			const [resource] = entry.permission.split(":");
+			if (!resource) {
+				return false;
+			}
+			return visibleSet.has(resource as Resource);
+		});
+	}, [extras, isFilteringActive, visibleSet]);
+
+	if (!resourceEntries.length && !filteredExtras.length) {
 		return (
 			<div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
 				No permissions selected yet.
@@ -402,42 +429,26 @@ const PermissionSelected = ({
 					<div className="font-semibold capitalize">
 						{formatResourceLabel(resource)}
 					</div>
-					<div className="flex flex-col gap-2">
+					<div className="flex flex-wrap gap-2">
 						{(actions ?? []).map(({ action, conditions }) => (
-							<div
-								key={`${resource}-${action}`}
-								className="flex items-center gap-2 rounded-md border px-3 py-2"
-							>
-								<Badge variant="secondary">{formatActionLabel(action)}</Badge>
-								{conditions ? (
-									<span className="text-xs text-muted-foreground">
-										{formatConditions(conditions)}
-									</span>
-								) : null}
-							</div>
+							<Badge key={`${resource}-${action}`} variant="secondary">
+								{formatActionLabel(action)}
+								{conditions ? " *" : ""}
+							</Badge>
 						))}
 					</div>
 				</div>
 			))}
 
-			{extras.length > 0 && (
+			{filteredExtras.length > 0 && (
 				<div className="space-y-2">
 					<div className="font-semibold">Other permissions</div>
-					<div className="flex flex-col gap-2">
-						{extras.map((entry) => (
-							<div
-								key={entry.permission}
-								className="flex items-center gap-2 rounded-md border px-3 py-2"
-							>
-								<Badge variant="outline">
-									{formatPermissionLabel(entry.permission)}
-								</Badge>
-								{entry.conditions ? (
-									<span className="text-xs text-muted-foreground">
-										{formatConditions(entry.conditions)}
-									</span>
-								) : null}
-							</div>
+					<div className="flex flex-wrap gap-2">
+						{filteredExtras.map((entry) => (
+							<Badge key={entry.permission} variant="outline">
+								{formatPermissionLabel(entry.permission)}
+								{entry.conditions ? " *" : ""}
+							</Badge>
 						))}
 					</div>
 				</div>
@@ -506,6 +517,9 @@ export const RolePermissionPanel = ({
 		});
 	}, [dropdownResources, normalizedSearch, resourceActions]);
 
+	const isFilteringActive =
+		selectedResource !== "all" || normalizedSearch.length > 0;
+
 	const disableEditing = roleId === "super_admin";
 	const showGlobalNotice = hasGlobalAccess;
 	const displayRoleName = roleName
@@ -537,7 +551,7 @@ export const RolePermissionPanel = ({
 						) : null}
 					</div>
 					<Button>
-						<Save className="mr-2 h-4 w-4" />
+						<Save className=" h-4 w-4" />
 						Save Permissions
 					</Button>
 				</div>
@@ -621,6 +635,8 @@ export const RolePermissionPanel = ({
 						<PermissionSelected
 							assignedRecord={assignedRecord}
 							extras={extras}
+							visibleResources={filteredResources}
+							isFilteringActive={isFilteringActive}
 						/>
 					</TabsContent>
 				</Tabs>
