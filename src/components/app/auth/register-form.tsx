@@ -366,7 +366,7 @@ export function RegisterForm() {
 		try {
 			await registerMutation.mutateAsync({
 				email: email.trim().toLowerCase(),
-				fullname: trimmedName,
+				fullName: trimmedName,
 				password,
 			});
 			addToast("Account created successfully.", "success");
@@ -381,19 +381,19 @@ export function RegisterForm() {
 					return Array.isArray(value) ? value.join(" ") : value;
 				};
 				const nextErrors: {
-					fullname?: string;
+					fullName?: string;
 					password?: string;
 					general?: string;
 				} = {
-					fullname: resolveDetail(details?.fullname as string | string[]),
+					fullName: resolveDetail(details?.fullName as string | string[]),
 					password: resolveDetail(details?.password as string | string[]),
 				};
 				nextErrors.general =
-					nextErrors.fullname || nextErrors.password
+					nextErrors.fullName || nextErrors.password
 						? error.message || "Registration failed."
 						: error.message || "Registration failed.";
 				const messages = [
-					nextErrors.fullname,
+					nextErrors.fullName,
 					nextErrors.password,
 					nextErrors.general,
 				].filter(Boolean) as string[];
