@@ -1,446 +1,258 @@
-import { Permission, RoleMapping } from "./type";
+import { Attribute, Permission, Policy, Role } from "./type";
 
-export const permissionsList: Permission[] = [
-	{
-		resource: "staff",
-		action: "list",
-		name: "staff:list",
-		description: "List staff members",
-	},
-	{
-		resource: "staff",
-		action: "create",
-		name: "staff:create",
-		description: "Create new staff members",
-	},
-	{
-		resource: "staff",
-		action: "read",
-		name: "staff:read",
-		description: "View staff member information",
-	},
-	{
-		resource: "staff",
-		action: "update",
-		name: "staff:update",
-		description: "Update staff member information",
-	},
-	{
-		resource: "staff",
-		action: "delete",
-		name: "staff:delete",
-		description: "Delete staff members",
-	},
-	{
-		resource: "staff",
-		action: "export",
-		name: "staff:export",
-		description: "Export staff data",
-	},
-	// ========== USERS ==========
-	{
-		resource: "customers",
-		action: "list",
-		name: "customers:list",
-		description: "List customers",
-	},
-	{
-		resource: "customers",
-		action: "create",
-		name: "customers:create",
-		description: "Create new customers",
-	},
-	{
-		resource: "customers",
-		action: "read",
-		name: "customers:read",
-		description: "View customer information",
-	},
-	{
-		resource: "customers",
-		action: "update",
-		name: "customers:update",
-		description: "Update customer information",
-	},
-	{
-		resource: "customers",
-		action: "delete",
-		name: "customers:delete",
-		description: "Delete customers",
-	},
-	{
-		resource: "customers",
-		action: "export",
-		name: "customers:export",
-		description: "Export customer data",
-	},
-
-	// ========== PRODUCTS ==========
-	{
-		resource: "products",
-		action: "list",
-		name: "products:list",
-		description: "List products",
-	},
-	{
-		resource: "products",
-		action: "create",
-		name: "products:create",
-		description: "Create new products",
-	},
-	{
-		resource: "products",
-		action: "read",
-		name: "products:read",
-		description: "View products",
-	},
-	{
-		resource: "products",
-		action: "update",
-		name: "products:update",
-		description: "Update products",
-	},
-	{
-		resource: "products",
-		action: "delete",
-		name: "products:delete",
-		description: "Delete products",
-	},
-	{
-		resource: "products",
-		action: "export",
-		name: "products:export",
-		description: "Export product data",
-	},
-
-	// ========== CATEGORIES ==========
-	{
-		resource: "categories",
-		action: "list",
-		name: "categories:list",
-		description: "List categories",
-	},
-	{
-		resource: "categories",
-		action: "create",
-		name: "categories:create",
-		description: "Create categories",
-	},
-	{
-		resource: "categories",
-		action: "read",
-		name: "categories:read",
-		description: "View categories",
-	},
-	{
-		resource: "categories",
-		action: "update",
-		name: "categories:update",
-		description: "Update categories",
-	},
-	{
-		resource: "categories",
-		action: "delete",
-		name: "categories:delete",
-		description: "Delete categories",
-	},
-
-	// ========== ORDERS ==========
-	{
-		resource: "orders",
-		action: "list",
-		name: "orders:list",
-		description: "List orders",
-	},
-	{
-		resource: "orders",
-		action: "create",
-		name: "orders:create",
-		description: "Create orders",
-	},
-	{
-		resource: "orders",
-		action: "read",
-		name: "orders:read",
-		description: "View orders",
-	},
-	{
-		resource: "orders",
-		action: "update",
-		name: "orders:update",
-		description: "Update order status",
-	},
-	{
-		resource: "orders",
-		action: "delete",
-		name: "orders:delete",
-		description: "Cancel/delete orders",
-	},
-	{
-		resource: "orders",
-		action: "export",
-		name: "orders:export",
-		description: "Export order data",
-	},
-	{
-		resource: "orders",
-		action: "approve",
-		name: "orders:approve",
-		description: "Approve orders",
-	},
-	{
-		resource: "orders",
-		action: "reject",
-		name: "orders:reject",
-		description: "Reject/cancel orders",
-	},
-
-	// ========== TRANSACTIONS ==========
-	{
-		resource: "transactions",
-		action: "list",
-		name: "transactions:list",
-		description: "List transactions",
-	},
-	{
-		resource: "transactions",
-		action: "read",
-		name: "transactions:read",
-		description: "View transaction information",
-	},
-	{
-		resource: "transactions",
-		action: "export",
-		name: "transactions:export",
-		description: "Export transaction data",
-	},
-
-	// ========== COUPONS ==========
-	{
-		resource: "coupons",
-		action: "list",
-		name: "coupons:list",
-		description: "List coupons",
-	},
-	{
-		resource: "coupons",
-		action: "create",
-		name: "coupons:create",
-		description: "Create coupons",
-	},
-	{
-		resource: "coupons",
-		action: "read",
-		name: "coupons:read",
-		description: "View coupon",
-	},
-	{
-		resource: "coupons",
-		action: "update",
-		name: "coupons:update",
-		description: "Update coupons",
-	},
-	{
-		resource: "coupons",
-		action: "delete",
-		name: "coupons:delete",
-		description: "Delete coupons",
-	},
-
-	// ========== REPORTS ==========
-	{
-		resource: "reports",
-		action: "list",
-		name: "reports:list",
-		description: "List reports",
-	},
-	{
-		resource: "reports",
-		action: "export",
-		name: "reports:export",
-		description: "Export reports",
-	},
-
-	// ========== AUDIT LOGS ==========
-	{
-		resource: "audit_logs",
-		action: "list",
-		name: "audit_logs:list",
-		description: "List audit logs",
-	},
-	{
-		resource: "audit_logs",
-		action: "read",
-		name: "audit_logs:read",
-		description: "Read audit logs",
-	},
-	{
-		resource: "audit_logs",
-		action: "export",
-		name: "audit_logs:export",
-		description: "Export audit logs",
-	},
+export const permissions: Permission[] = [
+  {
+    id: "perm_user_read",
+    displayName: "View User List",
+    description: "Allows viewing user details and user lists",
+    resource: "user",
+    action: "read",
+    isActive: true,
+  },
+  {
+    id: "perm_user_write",
+    displayName: "Create/Edit User",
+    description:
+      "Allows creating new users or updating existing user information",
+    resource: "user",
+    action: "write",
+    isActive: true,
+  },
+  {
+    id: "perm_user_delete",
+    displayName: "Delete User",
+    description: "Allows removing users from the system",
+    resource: "user",
+    action: "delete",
+    isActive: true,
+  },
+  {
+    id: "perm_product_read",
+    displayName: "View Products",
+    description: "View product lists and specific details",
+    resource: "product",
+    action: "read",
+    isActive: true,
+  },
+  {
+    id: "perm_product_write",
+    displayName: "Manage Products",
+    description: "Add new products or edit product details",
+    resource: "product",
+    action: "write",
+    isActive: true,
+  },
+  {
+    id: "perm_order_read",
+    displayName: "View Orders",
+    description: "View order history and order details",
+    resource: "order",
+    action: "read",
+    isActive: true,
+  },
+  {
+    id: "perm_order_approve",
+    displayName: "Approve Orders",
+    description: "Approve pending orders for processing",
+    resource: "order",
+    action: "approve",
+    isActive: true,
+  },
+  {
+    id: "perm_order_reject",
+    displayName: "Reject Orders",
+    description: "Cancel or reject orders",
+    resource: "order",
+    action: "reject",
+    isActive: true,
+  },
+  {
+    id: "perm_inventory_update",
+    displayName: "Update Inventory",
+    description: "Adjust inventory stock levels",
+    resource: "inventory",
+    action: "update",
+    isActive: true,
+  },
 ];
 
-export const roleMapping: RoleMapping = {
-	super_admin: [
-		{
-			permission: "*:*",
-		},
-	],
-	admin: [
-		{
-			permission: "staff:create",
-			conditions: {
-				role: ["manager", "support"],
-			},
-		},
-		{
-			permission: "staff:list",
-			conditions: {
-				role: ["manager", "support"],
-			},
-		},
-		{
-			permission: "staff:read",
-			conditions: {
-				role: ["manager", "support"],
-			},
-		},
-		{
-			permission: "staff:update",
-			conditions: {
-				role: ["manager", "support"],
-			},
-		},
-		{
-			permission: "staff:export",
-			conditions: {
-				role: ["manager", "support"],
-			},
-		},
-		{
-			permission: "customers:*",
-		},
-		{
-			permission: "products:*",
-		},
-		{
-			permission: "categories:*",
-		},
-		{
-			permission: "orders:*",
-		},
-		{
-			permission: "transactions:*",
-		},
-		{
-			permission: "coupons:*",
-		},
-		{
-			permission: "reports:*",
-		},
-		{
-			permission: "audit_logs:*",
-		},
-	],
-	manager: [
-		{
-			permission: "staff:list",
-			conditions: {
-				role: ["support"],
-			},
-		},
-		{
-			permission: "staff:read",
-			conditions: {
-				role: ["support"],
-			},
-		},
-		{
-			permission: "staff:update",
-			conditions: {
-				role: ["support"],
-			},
-		},
-		{
-			permission: "customers:list",
-		},
-		{
-			permission: "customers:read",
-		},
-		{
-			permission: "products:*",
-		},
-		{
-			permission: "categories:*",
-		},
-		{
-			permission: "orders:*",
-		},
-		{
-			permission: "transactions:list",
-		},
-		{
-			permission: "transactions:read",
-		},
-		{
-			permission: "coupons:list",
-		},
-		{
-			permission: "coupons:read",
-		},
-	],
-	support: [
-		{
-			permission: "customers:read",
-		},
-		{
-			permission: "customers:update",
-		},
-		{
-			permission: "products:read",
-		},
-		{
-			permission: "categories:read",
-		},
-		{
-			permission: "orders:read",
-		},
-		{
-			permission: "orders:update",
-		},
-		{
-			permission: "transactions:read",
-		},
-		{
-			permission: "coupons:read",
-		},
-	],
-	customer: [
-		{
-			permission: "products:list",
-		},
-		{
-			permission: "products:read",
-		},
-		{
-			permission: "orders:list",
-			conditions: {
-				owner: "${userId}",
-			},
-		},
-		{
-			permission: "orders:read",
-			conditions: {
-				owner: "${userId}",
-			},
-		},
-		{
-			permission: "orders:update",
-			conditions: {
-				owner: "${userId}",
-			},
-		},
-	],
-};
+export const roles: Role[] = [
+  {
+    id: "role_super_admin",
+    name: "Super Admin",
+    description: "Highest level of access, full system control",
+    permissions: [
+      "perm_user_read",
+      "perm_user_write",
+      "perm_user_delete",
+      "perm_product_read",
+      "perm_product_write",
+      "perm_order_read",
+      "perm_order_approve",
+      "perm_order_reject",
+      "perm_inventory_update",
+    ],
+    color: "hsl(48, 100%, 50%)",
+    userCount: 2,
+    isActive: true,
+  },
+  {
+    id: "role_admin",
+    name: "Admin",
+    description:
+      "System administrator with restrictions on sensitive data deletion",
+    permissions: [
+      "perm_user_read",
+      "perm_user_write",
+      "perm_product_read",
+      "perm_product_write",
+      "perm_order_read",
+      "perm_order_approve",
+      "perm_inventory_update",
+    ],
+    color: "hsl(211, 100%, 50%)",
+    userCount: 5,
+    isActive: true,
+  },
+  {
+    id: "role_manager",
+    name: "Manager",
+    description: "Operations manager, focused on orders and inventory",
+    permissions: [
+      "perm_product_read",
+      "perm_order_read",
+      "perm_order_approve",
+      "perm_order_reject",
+      "perm_inventory_update",
+    ],
+    color: "hsl(100, 50%, 45%)",
+    userCount: 12,
+    isActive: true,
+  },
+  {
+    id: "role_support",
+    name: "Support",
+    description: "Customer support staff, read-only access for assistance",
+    permissions: ["perm_user_read", "perm_product_read", "perm_order_read"],
+    color: "hsl(32, 95%, 50%)",
+    userCount: 30,
+    isActive: true,
+  },
+];
+
+export const attributes: Attribute[] = [
+  {
+    id: "attr_clearance_level",
+    name: "clearance_level",
+    type: "user",
+    dataType: "number",
+    description: "Security clearance level (1-5)",
+    isSystem: false,
+  },
+  {
+    id: "attr_order_amount",
+    name: "order_amount",
+    type: "resource",
+    dataType: "number",
+    description: "Total monetary value of the order",
+    isSystem: true,
+  },
+  {
+    id: "attr_ip_address",
+    name: "ip_address",
+    type: "environment",
+    dataType: "ip_range",
+    description: "Client IP address",
+    isSystem: false,
+  },
+  {
+    id: "attr_time_of_day",
+    name: "time_of_day",
+    type: "environment",
+    dataType: "string",
+    description: "Current time (HH:MM format)",
+    isSystem: false,
+  },
+  {
+    id: "attr_location",
+    name: "location",
+    type: "user",
+    dataType: "enum",
+    possibleValues: ["us", "eu", "apac"],
+    description: "User geographic region",
+    isSystem: false,
+  },
+  {
+    id: "attr_owner_id",
+    name: "owner_id",
+    type: "resource",
+    dataType: "string",
+    description: "Resource owner user ID",
+    isSystem: false,
+  },
+];
+
+export const policies: Policy[] = [
+  {
+    id: "pol_high_value_approval",
+    name: "High Value Order Approval",
+    description:
+      "Only allows Managers to approve orders over $1000 if they have clearance level > 3",
+    effect: "allow",
+    resource: "order",
+    action: "approve",
+    priority: 1,
+    roles: ["role_manager"],
+    conditions: [
+      {
+        attribute: "order_amount",
+        operator: "greater_than",
+        value: "1000",
+      },
+      {
+        attribute: "clearance_level",
+        operator: "greater_than",
+        value: "3",
+      },
+    ],
+    isActive: true,
+  },
+  {
+    id: "pol_restrict_inventory_ip",
+    name: "Inventory IP Restriction",
+    description:
+      "Deny inventory updates if the IP address is not within the internal network range",
+    effect: "deny",
+    resource: "inventory",
+    action: "update",
+    priority: 10,
+    roles: ["role_manager", "role_admin"],
+    conditions: [
+      {
+        attribute: "ip_address",
+        operator: "not_equals",
+        value: "192.168.1.0/24",
+      },
+    ],
+    isActive: true,
+  },
+  {
+    id: "pol_support_view_limit",
+    name: "Support View Limit",
+    description:
+      "Support staff can only view users belonging to the Sales department",
+    effect: "allow",
+    resource: "user",
+    action: "read",
+    priority: 5,
+    roles: ["role_support"],
+    conditions: [
+      {
+        attribute: "department",
+        operator: "equals",
+        value: "sales",
+      },
+    ],
+    isActive: true,
+  },
+];
