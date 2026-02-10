@@ -76,35 +76,46 @@ export function RoleFormModal({ open, onOpenChange, editRole }: Props) {
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="name">Name</Label>
+              {form.formState.errors.name && (
+                <p className="text-xs text-destructive/80 italic font-medium">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
             <Input
               id="name"
               placeholder="e.g. Moderator"
               {...form.register("name")}
             />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.name.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">Description</Label>
+              {form.formState.errors.description && (
+                <p className="text-xs text-destructive/80 italic font-medium">
+                  {form.formState.errors.description.message}
+                </p>
+              )}
+            </div>
             <Input
               id="description"
               placeholder="What this role does..."
               {...form.register("description")}
             />
-            {form.formState.errors.description && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.description.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Color</Label>
+            <div className="flex items-center justify-between">
+              <Label>Color</Label>
+              {form.formState.errors.color && (
+                <p className="text-xs text-destructive/80 italic font-medium">
+                  {form.formState.errors.color.message}
+                </p>
+              )}
+            </div>
             <div className="flex gap-2 flex-wrap">
               <ColorPicker
                 value={selectedColor}
@@ -205,7 +216,8 @@ const ColorPicker = ({ value = "", onChange }: ColorPickerProps) => {
                 htmlFor={color.value}
                 className="flex w-8 h-8 items-center justify-center rounded-full
 								border-2 border-muted cursor-pointer
-								hover:ring-2 hover:ring-sidebar-ring
+                transition-colors duration-200 ease-in-out
+								hover:ring-2 hover:ring-(--checked-color)/80
 								peer-data-[state=checked]:ring-2
 								peer-data-[state=checked]:ring-(--checked-color)"
                 style={
@@ -217,8 +229,21 @@ const ColorPicker = ({ value = "", onChange }: ColorPickerProps) => {
               />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={5}>
-            <p>{color.label}</p>
+          <TooltipContent
+            side="top"
+            sideOffset={5}
+            style={{
+              borderColor: color.value,
+            }}
+            className="bg-background select-none"
+          >
+            <p
+              style={{
+                color: color.value,
+              }}
+            >
+              {color.label}
+            </p>
           </TooltipContent>
         </Tooltip>
       ))}

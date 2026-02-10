@@ -76,6 +76,7 @@ export default function RolesPage() {
         description="Manage role-based access control (RBAC). Assign permissions to roles, then roles to users."
         badge="RBAC"
       />
+
       <div className="rounded-xl p-5 border border-l-3 border-l-primary flex gap-3">
         <Key className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div>
@@ -120,7 +121,7 @@ export default function RolesPage() {
                 )}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div
                       className="h-10 w-10 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: `${role.color}20` }}
@@ -144,7 +145,7 @@ export default function RolesPage() {
                     >
                       <Button
                         variant="ghost"
-                        size="icon-sm"
+                        size="icon-xs"
                         className="focus-visible:ring-0"
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -213,7 +214,11 @@ export default function RolesPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <Button variant="outline" size="icon-sm">
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => openEditRole(selectedRole)}
+                  >
                     <SquarePen className="h-4 w-4" />
                   </Button>
                   <Switch checked={selectedRole.isActive} />
@@ -228,13 +233,13 @@ export default function RolesPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="table-header text-left py-3">
+                        <th className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left py-3">
                           Resource
                         </th>
                         {actions.map((action) => (
                           <th
                             key={action}
-                            className="table-header text-center py-3 capitalize"
+                            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center py-3"
                           >
                             {action}
                           </th>
@@ -302,6 +307,7 @@ export default function RolesPage() {
           )}
         </div>
       </div>
+
       <RoleFormModal
         key={editingRole?.id ?? "new-role"}
         open={roleModalOpen}
