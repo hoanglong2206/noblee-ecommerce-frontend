@@ -159,7 +159,10 @@ export function RoleFormModal({ open, onOpenChange, editRole }: Props) {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                onOpenChange(false);
+                form.reset();
+              }}
             >
               Cancel
             </Button>

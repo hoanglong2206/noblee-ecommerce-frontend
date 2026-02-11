@@ -34,7 +34,9 @@ export function DeleteConfirmModal({
             <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </div>
-            <DialogTitle className="text-foreground">{title}</DialogTitle>
+            <DialogTitle className="text-foreground capitalize">
+              {title}
+            </DialogTitle>
           </div>
           <DialogDescription className="text-muted-foreground text-sm pt-2">
             {description}

@@ -27,26 +27,51 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemo, useState } from "react";
-import { actions, resources, Role } from "@/features/roles/type";
+import { actions, Permission, resources, Role } from "@/features/roles/type";
 import { roles, permissions } from "@/features/roles/data";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import { DeleteConfirmModal, RoleFormModal } from "@/components/app/modal";
+import {
+  DeleteConfirmModal,
+  PermissionFormModal,
+  RoleFormModal,
+} from "@/components/app/modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function RolesPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedResource, setSelectedResource] = useState<string>("all");
 
-  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [roleModalOpen, setRoleModalOpen] = useState<boolean>(false);
+  const [permissionModalOpen, setPermissionModalOpen] =
+    useState<boolean>(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
-
-  const filteredRoles = roles.filter(
-    (role) =>
-      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.description.toLowerCase().includes(searchTerm.toLowerCase()),
+  const [editingPermission, setEditingPermission] = useState<Permission | null>(
+    null,
   );
+
+  const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "role" | "permission";
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const filteredRoles = useMemo(() => {
+    return roles.filter((role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [roles, searchTerm]);
 
   const hasPermission = (role: Role, resource: string, action: string) => {
     const perm = permissions.find(
@@ -55,22 +80,35 @@ export default function RolesPage() {
     return perm ? role.permissions.includes(perm.id) : false;
   };
 
-  const handleDeleteClick = (role: Role) => {
-    setRoleToDelete(role);
+  const openDeletePermission = (permission: Permission) => {
+    setDeleteTarget({
+      type: "permission",
+      id: permission.id,
+      name: permission.displayName,
+    });
+    setDeleteOpen(true);
+  };
+
+  const openCreatePermission = () => {
+    setEditingPermission(null);
+    setPermissionModalOpen(true);
+  };
+  const openEditPermission = (permission: Permission) => {
+    setEditingPermission(permission);
+    setPermissionModalOpen(true);
   };
 
   const openCreateRole = () => {
     setEditingRole(null);
     setRoleModalOpen(true);
   };
-
   const openEditRole = (role: Role) => {
     setEditingRole(role);
     setRoleModalOpen(true);
   };
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-hidden bg-muted/50 p-6">
+    <div className="flex h-full flex-col gap-4 bg-muted/50 p-6 overflow-auto">
       <AdminHeader
         title="Roles & Permissions"
         description="Manage role-based access control (RBAC). Assign permissions to roles, then roles to users."
@@ -92,10 +130,59 @@ export default function RolesPage() {
           </p>
         </div>
       </div>
+      {/* Permissions Registry */}
+      <div className="rounded-xl p-5 border border-border bg-linear-to-br from-background to-background/50">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-foreground">
+            Permissions Registry
+          </h3>
+          <div className="flex items-center gap-2">
+            {/* Select Resource + All */}
+            <Select
+              value={selectedResource}
+              onValueChange={setSelectedResource}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Select a resource" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="all">All Resources</SelectItem>
+                {resources.map((resource) => (
+                  <SelectItem key={resource} value={resource}>
+                    {resource.charAt(0).toUpperCase() + resource.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 overflow-hidden">
+            <Button onClick={openCreatePermission} size="sm" variant="outline">
+              <Plus className="h-3 w-3 mr-1" /> Add Permission
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-2 max-h-[15vh] overflow-y-auto">
+          {permissions
+            .filter(
+              (perm) =>
+                selectedResource === "all" ||
+                perm.resource === selectedResource,
+            )
+            .map((perm) => (
+              <PermissionCard
+                key={perm.id}
+                perm={perm}
+                isAction={true}
+                openEditPermission={openEditPermission}
+                openDeletePermission={openDeletePermission}
+              />
+            ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1">
         {/* Roles List */}
-        <div className="lg:col-span-1 flex flex-col space-y-4 border rounded-xl p-5 bg-background overflow-hidden">
+        <div className="lg:col-span-1 flex flex-col space-y-4 border rounded-xl p-5 bg-background">
           <div className="flex items-center justify-between gap-2">
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -110,7 +197,7 @@ export default function RolesPage() {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex-1 space-y-2 overflow-y-auto">
+          <div className="flex-1 space-y-2 overflow-y-auto max-h-[60vh]">
             {filteredRoles.map((role) => (
               <div
                 key={role.id}
@@ -164,7 +251,12 @@ export default function RolesPage() {
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteClick(role);
+                          setDeleteTarget({
+                            type: "role",
+                            id: role.id,
+                            name: role.name,
+                          });
+                          setDeleteOpen(true);
                         }}
                         className="text-destructive"
                       >
@@ -190,7 +282,7 @@ export default function RolesPage() {
         </div>
 
         {/* Permissions Matrix */}
-        <div className="lg:col-span-3 overflow-y-auto">
+        <div className="lg:col-span-3">
           {selectedRole ? (
             <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-6 h-full flex flex-col">
               <div className="flex items-center justify-between mb-6">
@@ -224,77 +316,145 @@ export default function RolesPage() {
                   <Switch checked={selectedRole.isActive} />
                 </div>
               </div>
-
-              <div className="mb-6 overflow-y-auto flex-1">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Permissions Matrix
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left py-3">
-                          Resource
-                        </th>
-                        {actions.map((action) => (
-                          <th
-                            key={action}
-                            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center py-3"
-                          >
-                            {action}
+              <Tabs defaultValue="resourceAccessMatrix" className="space-y-2">
+                <TabsList className="bg-secondary/50">
+                  <TabsTrigger value="resourceAccessMatrix">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Resource Access Matrix
+                    </h3>
+                  </TabsTrigger>
+                  <TabsTrigger value="assignedPermissions">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Assigned Permissions
+                    </h3>
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent
+                  value="resourceAccessMatrix"
+                  className="overflow-y-auto flex-1"
+                >
+                  <div className="overflow-auto max-h-[48vh]">
+                    <table className="w-full min-w-max table-auto">
+                      <thead className="sticky top-0 bg-background z-10">
+                        <tr className="border-b border-border">
+                          <th className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-left py-3">
+                            Resource
                           </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {resources.map((resource) => (
-                        <tr
-                          key={resource}
-                          className="border-b border-border/50 hover:bg-muted/20"
-                        >
-                          <td className="py-3 font-medium capitalize">
-                            {resource}
-                          </td>
                           {actions.map((action) => (
-                            <td key={action} className="py-3 text-center">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="inline-flex items-center justify-center">
+                            <th
+                              key={action}
+                              className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center py-3"
+                            >
+                              {action}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {resources.map((resource) => (
+                          <tr
+                            key={resource}
+                            className="border-b border-border/50 hover:bg-muted/20"
+                          >
+                            <td className="py-3 font-medium capitalize">
+                              {resource}
+                            </td>
+                            {actions.map((action) => (
+                              <td key={action} className="py-3 text-center">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="inline-flex items-center justify-center">
+                                        {hasPermission(
+                                          selectedRole,
+                                          resource,
+                                          action,
+                                        ) ? (
+                                          <div className="h-6 w-6 rounded-full bg-green-300/80 flex items-center justify-center">
+                                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                          </div>
+                                        ) : (
+                                          <div className="h-6 w-6 rounded-full bg-muted/30 flex items-center justify-center">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent sideOffset={5}>
                                       {hasPermission(
                                         selectedRole,
                                         resource,
                                         action,
-                                      ) ? (
-                                        <div className="h-6 w-6 rounded-full bg-green-300/80 flex items-center justify-center">
-                                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                        </div>
-                                      ) : (
-                                        <div className="h-6 w-6 rounded-full bg-muted/30 flex items-center justify-center">
-                                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
-                                        </div>
-                                      )}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent sideOffset={5}>
-                                    {hasPermission(
-                                      selectedRole,
-                                      resource,
-                                      action,
-                                    )
-                                      ? `Can ${action} ${resource}`
-                                      : `No ${action} permission for ${resource}`}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                                      )
+                                        ? `Can ${action} ${resource}`
+                                        : `No ${action} permission for ${resource}`}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+                <TabsContent
+                  value="assignedPermissions"
+                  className="overflow-y-auto flex-1 max-h-[48vh]"
+                >
+                  {selectedRole
+                    ? (() => {
+                        const groupedPermissions = permissions
+                          .filter((perm) =>
+                            selectedRole.permissions.includes(perm.id),
+                          )
+                          .reduce(
+                            (groups: { [key: string]: Permission[] }, perm) => {
+                              if (!groups[perm.resource]) {
+                                groups[perm.resource] = [];
+                              }
+                              groups[perm.resource].push(perm);
+                              return groups;
+                            },
+                            {},
+                          );
+
+                        const sortedResources =
+                          Object.keys(groupedPermissions).sort(); // Sort alphabet để đẹp
+
+                        if (sortedResources.length === 0) {
+                          return (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No permissions assigned to this role.
+                            </p>
+                          );
+                        }
+
+                        return sortedResources.map((resource) => (
+                          <div key={resource}>
+                            <h4 className="text-sm font-semibold text-foreground mb-2 capitalize">
+                              {resource}
+                            </h4>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-2">
+                              {groupedPermissions[resource]
+                                .sort((a, b) =>
+                                  a.action.localeCompare(b.action),
+                                ) // Sort actions alphabet
+                                .map((perm) => (
+                                  <PermissionCard
+                                    key={perm.id}
+                                    perm={perm}
+                                    isAction={false}
+                                  />
+                                ))}
+                            </div>
+                          </div>
+                        ));
+                      })()
+                    : null}
+                </TabsContent>
+              </Tabs>
             </div>
           ) : (
             <div className="glass-card p-12 text-center animate-fade-in">
@@ -308,6 +468,12 @@ export default function RolesPage() {
         </div>
       </div>
 
+      <PermissionFormModal
+        key={editingPermission?.id ?? "new-permission"}
+        open={permissionModalOpen}
+        onOpenChange={setPermissionModalOpen}
+        editPermission={editingPermission}
+      />
       <RoleFormModal
         key={editingRole?.id ?? "new-role"}
         open={roleModalOpen}
@@ -315,18 +481,75 @@ export default function RolesPage() {
         editRole={editingRole}
       />
       <DeleteConfirmModal
-        open={!!roleToDelete}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRoleToDelete(null);
-          }
-        }}
-        title="Delete Role"
-        description={`Are you sure you want to delete "${roleToDelete?.name}"? This will remove the role from all assigned users.`}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`Delete ${deleteTarget?.type}`}
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
         onConfirm={() => {
-          setRoleToDelete(null);
+          setDeleteOpen(false);
         }}
       />
     </div>
   );
 }
+
+const PermissionCard = ({
+  perm,
+  isAction,
+  openDeletePermission,
+  openEditPermission,
+}: {
+  perm: Permission;
+  isAction: boolean;
+  openDeletePermission?: (perm: Permission) => void;
+  openEditPermission?: (perm: Permission) => void;
+}) => {
+  return (
+    <div
+      key={perm.id}
+      className="flex items-center gap-3 rounded-lg bg-secondary/40 p-3 group select-none"
+    >
+      <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+        <span className="text-xs font-mono font-semibold text-primary uppercase">
+          {perm.action.slice(0, 3)}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">
+          {perm.displayName}
+        </p>
+        <p className="text-xs font-mono text-muted-foreground truncate">
+          {perm.resource} → {perm.action}
+        </p>
+      </div>
+      {isAction && (
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => {
+              if (openEditPermission) {
+                openEditPermission(perm);
+              }
+            }}
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => {
+              if (openDeletePermission) {
+                openDeletePermission(perm);
+              }
+            }}
+          >
+            <Trash2 className="h-3 w-3 text-destructive" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};

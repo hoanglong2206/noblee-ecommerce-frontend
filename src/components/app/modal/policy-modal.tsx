@@ -414,7 +414,10 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                onOpenChange(false);
+                form.reset();
+              }}
             >
               Cancel
             </Button>
