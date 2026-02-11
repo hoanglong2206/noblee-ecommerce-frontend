@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  actions,
+  Policy,
+  PolicyCondition,
+  resources,
+} from "@/features/roles/type";
+import { attributes, roles } from "@/features/roles/data";
+import { getOperatorDisplay } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { CSSProperties } from "react";
 
 const OPERATORS = [
   "equals",
@@ -31,18 +41,8 @@ const OPERATORS = [
   "in",
   "between",
 ] as const;
-const RESOURCES = [
-  "*",
-  "documents",
-  "users",
-  "analytics",
-  "billing",
-  "api",
-  "audit",
-  "settings",
-  "data",
-];
-const ACTIONS = ["*", "read", "write", "delete", "manage", "access", "export"];
+const RESOURCES = ["*", ...resources];
+const ACTIONS = ["*", ...actions];
 
 const conditionSchema = z.object({
   attribute: z.string().min(1, "Required"),
@@ -57,7 +57,7 @@ const policySchema = z.object({
   resource: z.string().min(1, "Resource is required"),
   action: z.string().min(1, "Action is required"),
   priority: z.number().min(1).max(100),
-  enabled: z.boolean(),
+  isActive: z.boolean(),
   roles: z.array(z.string()),
   conditions: z.array(conditionSchema),
 });
@@ -71,8 +71,6 @@ type Props = {
 };
 
 export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
-  const { roles, attributes, addPolicy, updatePolicy } = useAuthStore();
-
   const form = useForm<PolicyFormValues>({
     resolver: zodResolver(policySchema),
     defaultValues: editPolicy
@@ -83,7 +81,7 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
           resource: editPolicy.resource,
           action: editPolicy.action,
           priority: editPolicy.priority,
-          enabled: editPolicy.enabled,
+          isActive: editPolicy.isActive,
           roles: editPolicy.roles,
           conditions: editPolicy.conditions.map((c) => ({
             attribute: c.attribute,
@@ -98,7 +96,7 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
           resource: "*",
           action: "*",
           priority: 50,
-          enabled: true,
+          isActive: true,
           roles: [],
           conditions: [],
         },
@@ -119,7 +117,7 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
       resource: values.resource,
       action: values.action,
       priority: values.priority,
-      enabled: values.enabled,
+      isActive: values.isActive,
       roles: values.roles,
       conditions: values.conditions.map((c) => ({
         attribute: c.attribute,
@@ -127,18 +125,16 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
         value: c.value,
       })),
     };
-    if (editPolicy) {
-      updatePolicy(editPolicy.id, payload);
-    } else {
-      addPolicy(payload);
-    }
+
+    console.log(payload);
+
     onOpenChange(false);
     form.reset();
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl bg-card border-border max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {editPolicy ? "Edit Policy" : "Create Policy"}
@@ -147,17 +143,19 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="pol-name">Name</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pol-name">Name</Label>
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive/80 italic font-medium">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
               <Input
                 id="pol-name"
                 placeholder="e.g. Restrict API Access"
                 {...form.register("name")}
               />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="pol-priority">Priority (1-100)</Label>
@@ -172,17 +170,19 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pol-desc">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pol-desc">Description</Label>
+              {form.formState.errors.description && (
+                <p className="text-xs text-destructive/80 italic font-medium">
+                  {form.formState.errors.description.message}
+                </p>
+              )}
+            </div>
             <Input
               id="pol-desc"
               placeholder="What this policy enforces..."
               {...form.register("description")}
             />
-            {form.formState.errors.description && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.description.message}
-              </p>
-            )}
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -194,10 +194,10 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
                   form.setValue("effect", v as "allow" | "deny")
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   <SelectItem value="allow">Allow</SelectItem>
                   <SelectItem value="deny">Deny</SelectItem>
                 </SelectContent>
@@ -209,13 +209,21 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
                 value={form.watch("resource")}
                 onValueChange={(v) => form.setValue("resource", v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {RESOURCES.map((r) => (
                     <SelectItem key={r} value={r}>
-                      {r === "*" ? "* (All)" : r}
+                      {r === "*"
+                        ? "* (All)"
+                        : r
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -227,13 +235,21 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
                 value={form.watch("action")}
                 onValueChange={(v) => form.setValue("action", v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {ACTIONS.map((a) => (
                     <SelectItem key={a} value={a}>
-                      {a === "*" ? "* (All)" : a}
+                      {a === "*"
+                        ? "* (All)"
+                        : a
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -243,10 +259,10 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
 
           <div className="flex items-center gap-3">
             <Switch
-              checked={form.watch("enabled")}
-              onCheckedChange={(v) => form.setValue("enabled", v)}
+              checked={form.watch("isActive")}
+              onCheckedChange={(v) => form.setValue("isActive", v)}
             />
-            <Label>Enabled</Label>
+            <Label>Active</Label>
           </div>
 
           {/* Applicable Roles */}
@@ -274,12 +290,24 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
                           : current.filter((id) => id !== role.id),
                       );
                     }}
+                    className="size-4.5 cursor-pointer rounded-md border-(--role-color)/50 data-[state=checked]:border-(--role-color) data-[state=checked]:bg-(--role-color)/80"
+                    style={
+                      {
+                        "--role-color": role.color,
+                      } as CSSProperties
+                    }
                   />
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: role.color }}
-                  />
-                  <span className="text-xs text-foreground">{role.name}</span>
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-xs border-(--role-color)/50 text-(--role-color)"
+                    style={
+                      {
+                        "--role-color": role.color,
+                      } as CSSProperties
+                    }
+                  >
+                    {role.name}
+                  </Badge>
                 </label>
               ))}
             </div>
@@ -305,54 +333,63 @@ export function PolicyFormModal({ open, onOpenChange, editPolicy }: Props) {
                 No conditions — policy always applies to matched roles.
               </p>
             )}
-            <div className="space-y-2">
+            <div className="space-y-2 overflow-y-auto max-h-27">
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="flex gap-2 items-start p-2 rounded-lg bg-secondary/30 border border-border"
+                  className="flex gap-2 items-center p-1.5 rounded-lg bg-secondary/30 border border-border"
                 >
-                  <div className="flex-1 space-y-1">
-                    <Select
-                      value={form.watch(`conditions.${index}.attribute`)}
-                      onValueChange={(v) =>
-                        form.setValue(`conditions.${index}.attribute`, v)
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Attribute" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {attributes.map((a) => (
-                          <SelectItem key={a.id} value={a.name}>
-                            {a.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="w-28">
-                    <Select
-                      value={form.watch(`conditions.${index}.operator`)}
-                      onValueChange={(v) =>
-                        form.setValue(
-                          `conditions.${index}.operator`,
-                          v as (typeof OPERATORS)[number],
-                        )
-                      }
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {OPERATORS.map((op) => (
-                          <SelectItem key={op} value={op}>
-                            {op.replace("_", " ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex-1">
+                  <Select
+                    value={form.watch(`conditions.${index}.attribute`)}
+                    onValueChange={(v) =>
+                      form.setValue(`conditions.${index}.attribute`, v)
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs w-1/3">
+                      <SelectValue placeholder="Attribute" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {attributes.map((a) => (
+                        <SelectItem key={a.id} value={a.name}>
+                          {a.name
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={form.watch(`conditions.${index}.operator`)}
+                    onValueChange={(v) =>
+                      form.setValue(
+                        `conditions.${index}.operator`,
+                        v as (typeof OPERATORS)[number],
+                      )
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs w-1/3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {OPERATORS.map((op) => (
+                        <SelectItem key={op} value={op}>
+                          {op
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")}{" "}
+                          ({getOperatorDisplay(op)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="w-1/3">
                     <Input
                       className="h-8 text-xs"
                       placeholder="Value"
