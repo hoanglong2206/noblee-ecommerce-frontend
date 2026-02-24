@@ -1,4 +1,44 @@
-import { CustomerRow } from "@/components/app/admin";
+import type { CustomerRow } from "@/components/app/admin";
+import type { Product } from "@/components/app/shop";
+
+export interface Collection {
+  name: string;
+  imageUrl: string;
+  slug: string;
+}
+
+export const collections: Collection[] = [
+  {
+    name: "Smart Phones",
+    imageUrl:
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_8_1-min.jpg?v=1741245731&width=720",
+    slug: "smart-phones",
+  },
+  {
+    name: "Smart Watches",
+    imageUrl:
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_4_2-min.jpg?v=1741245450&width=1100",
+    slug: "smart-watches",
+  },
+  {
+    name: "Headphones",
+    imageUrl:
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_6_1-min.jpg?v=1741245547&width=720",
+    slug: "headphones",
+  },
+  {
+    name: "Tablets/iPad",
+    imageUrl:
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_5_1-min.jpg?v=1741245493&width=720",
+    slug: "tablets-ipad",
+  },
+  {
+    name: "Computers & Laptops",
+    imageUrl:
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_7_1-min.jpg?v=1741245590&width=720",
+    slug: "computers-laptops",
+  },
+];
 
 export const customersData: CustomerRow[] = [
   {
