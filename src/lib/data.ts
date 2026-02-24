@@ -104,3 +104,24 @@ export const customersData: CustomerRow[] = [
     lastActive: "6 months ago",
   },
 ];
+
+export const mockProducts: Product[] = [
+  {
+    id: "1",
+    name: "Apple iPhone 15 Pro Max Natural Titanium",
+    slug: "iphone-15-pro-max",
+    images: [
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_1-min.jpg?v=1741244760&width=720",
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_2-min.jpg?v=1741244760&width=720",
+      "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_3-min.jpg?v=1741244760&width=720",
+    ],
+    price: [1099.0, 1199.0, 1299.0],
+    discountType: "fixed",
+    discount: 200.0,
+    rating: 5,
+    reviewCount: 234,
+    size: ["256GB", "512GB", "1TB"],
+    badge: "Best Seller",
+    inStock: true,
+  },
+];
