@@ -12,18 +12,37 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 
+export interface ProductOption {
+  name: string; // "Color", "Size"
+  values: string[]; // ["Red", "Black"] or ["M", "L"]
+}
+
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  price: number;
+  stock: number;
+  attributes: Record<string, string>; // { Color: "Red", Size: "M" }
+  images?: string[];
+}
+
 export interface Product {
   id: string;
   name: string;
+  description: string;
   slug: string;
   images: string[];
-  price: number[];
+  basePrice: number;
   discountType?: "percentage" | "fixed";
   discount?: number;
   rating: number;
   reviewCount: number;
-  size?: string[];
   badge?: string;
+
+  options: ProductOption[];
+  variants: ProductVariant[];
+
+  totalStock: number;
   inStock: boolean;
 }
 
@@ -42,8 +61,9 @@ export const ProductCard = ({
     product.discountType === "percentage" ? (product.discount ?? 0) : 0;
   const newPrice =
     product.discountType === "percentage"
-      ? product.price[0] - (product.price[0] * (discountPercentage || 0)) / 100
-      : product.price[0] - (product.discount || 0);
+      ? product.basePrice -
+        (product.basePrice * (discountPercentage || 0)) / 100
+      : product.basePrice - (product.discount || 0);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -213,9 +233,9 @@ export const ProductCard = ({
           )}
         >
           <span className="font-semibold text-destructive/80">
-            ${product.price[0].toFixed(2)}
+            ${product.basePrice.toFixed(2)}
           </span>
-          {newPrice !== product.price[0] && (
+          {newPrice !== product.basePrice && (
             <span className="text-muted-foreground line-through">
               ${newPrice.toFixed(2)}
             </span>

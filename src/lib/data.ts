@@ -147,20 +147,92 @@ export const customersData: CustomerRow[] = [
 
 export const mockProducts: Product[] = [
   {
-    id: "1",
+    id: "p-1",
     name: "Apple iPhone 15 Pro Max Natural Titanium",
+    description:
+      "iPhone 15 Pro Max. Forged in titanium and featuring the revolutionary A17 Pro chip, it’s the most powerful iPhone we’ve ever created.",
     slug: "iphone-15-pro-max",
     images: [
       "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_1-min.jpg?v=1741244760&width=720",
       "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_2-min.jpg?v=1741244760&width=720",
       "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_3-min.jpg?v=1741244760&width=720",
     ],
-    price: [1099.0, 1199.0, 1299.0],
+    basePrice: 1099.0,
     discountType: "fixed",
     discount: 200.0,
     rating: 5,
     reviewCount: 234,
-    size: ["256GB", "512GB", "1TB"],
+    options: [
+      {
+        name: "Color",
+        values: ["Pink", "Blue"],
+      },
+      {
+        name: "Size",
+        values: ["256GB", "512GB", "1TB"],
+      },
+    ],
+    variants: [
+      {
+        id: "v-1",
+        sku: "p-1-pink-256gb",
+        price: 1099.0,
+        stock: 50,
+        attributes: { Color: "Pink", Size: "256GB" },
+        images: [
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_1-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_2-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_3-min.jpg?v=1741244760&width=720",
+        ],
+      },
+      {
+        id: "v-2",
+        sku: "p-1-pink-512gb",
+        price: 1199.0,
+        stock: 30,
+        attributes: { Color: "Pink", Size: "512GB" },
+        images: [
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_1-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_2-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_3-min.jpg?v=1741244760&width=720",
+        ],
+      },
+      {
+        id: "v-3",
+        sku: "p-1-pink-1tb",
+        price: 1299.0,
+        stock: 20,
+        attributes: { Color: "Pink", Size: "1TB" },
+        images: [
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_1-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_2-min.jpg?v=1741244760&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_1_3-min.jpg?v=1741244760&width=720",
+        ],
+      },
+      {
+        id: "v-4",
+        sku: "p-1-blue-256gb",
+        price: 1099.0,
+        stock: 40,
+        attributes: { Color: "Blue", Size: "256GB" },
+        images: [
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_8_1-min.jpg?v=1741245731&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_8_2-min.jpg?v=1741245731&width=720",
+        ],
+      },
+      {
+        id: "v-5",
+        sku: "p-1-blue-512gb",
+        price: 1199.0,
+        stock: 25,
+        attributes: { Color: "Blue", Size: "512GB" },
+        images: [
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_8_1-min.jpg?v=1741245731&width=720",
+          "https://glozin-demo-v2.myshopify.com/cdn/shop/files/products_digital_8_2-min.jpg?v=1741245731&width=720",
+        ],
+      },
+    ],
+    totalStock: 180,
     badge: "Best Seller",
     inStock: true,
   },

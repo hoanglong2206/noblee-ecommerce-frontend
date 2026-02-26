@@ -68,7 +68,7 @@ const hslToHex = (h: number, s: number, l: number): string => {
   s /= 100;
   l /= 100;
 
-  const k = (n: number) => (n + h / 30) % 12;
+  const k = (n: number) => (n + h / 30) % 7;
   const a = s * Math.min(l, 1 - l);
   const f = (n: number) =>
     l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
@@ -92,3 +92,30 @@ export const getOperatorDisplay = (operator: string) => {
   };
   return operators[operator] || operator;
 };
+
+const colorNameMap: Record<string, string> = {
+  // Pink family
+  Pink: "#FFC0CB",
+  LightPink: "#FFB6C1",
+  HotPink: "#FF69B4",
+  DeepPink: "#FF1493",
+
+  // Blue family
+  Blue: "#0000FF",
+  Navy: "#000080",
+  RoyalBlue: "#4169E1",
+  SkyBlue: "#87CEEB",
+  LightBlue: "#ADD8E6",
+
+  Red: "#FF0000",
+  Green: "#008000",
+  Black: "#000000",
+  White: "#FFFFFF",
+};
+
+export function getHexFromColorName(name: string): string {
+  const hex = colorNameMap[name];
+  if (hex) return hex;
+
+  return "#000000";
+}
